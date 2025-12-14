@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="max-width: 700px; margin: 0 auto;">
+    <h2 style="margin-bottom: 2rem;">Practice Nouns</h2>
+
+    <!-- Settings -->
+    <div class="card" style="margin-bottom: 2rem;">
+        <h3 style="margin-bottom: 1rem;">Settings</h3>
+        <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" id="show-article" onchange="updateSettings()">
+                <span>Show article (en/ei/et)</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" id="require-article" onchange="updateSettings()">
+                <span>Require typing article</span>
+            </label>
+        </div>
+    </div>
+
+    <!-- Practice Card -->
+    <div class="card" id="practice-card" style="display: none;">
+        <div id="word-display" style="font-size: 2rem; font-weight: 700; margin-bottom: 2rem; text-align: center;"></div>
+
+        <form id="answer-form" onsubmit="checkAnswer(event);">
+            <div id="article-input-container" style="display: none; margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Article:</label>
+                <input type="text" id="article-input" placeholder="en, ei, or et">
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Translation:</label>
+                <input type="text" id="translation-input" placeholder="Enter translation" required>
+            </div>
+
+            <div id="feedback" style="margin-bottom: 1rem; padding: 1rem; border-radius: 0.5rem; display: none;"></div>
+
+            <div style="display: flex; gap: 1rem;">
+                <button type="submit" class="btn" id="submit-btn">Check Answer</button>
+                <button type="button" class="btn btn-secondary" onclick="nextWord()" id="next-btn" style="display: none;">Next Word</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Loading/Start -->
+    <div id="start-screen" class="card" style="text-align: center;">
+        <button class="btn" onclick="startPractice()" style="font-size: 1.2rem; padding: 1.5rem 2rem;">
+            Start Practice
+        </button>
+    </div>
+
+    <div id="stats" style="margin-top: 2rem; text-align: center; color: var(--text-secondary);">
+        <span id="correct-count">0</span> correct | 
+        <span id="total-count">0</span> total
+    </div>
+</div>
+
+<script>
+let currentNoun = null;
+let seenIds = [];
+let correctCount = 0;
+let totalCount = 0;
+const MAX_SEEN = 50;
+
+// Settings
+let settings = {
+    showArticle: false,
+    requireArticle: false
+};
+
+// Load settings
+function loadSettings() {
+    const saved = localStorage.getItem('nounSettings');
+    if (saved) {
+        settings = JSON.parse(saved);
+        document.getElementById('show-article').checked = settings.showArticle;
+        document.getElementById('require-article').checked = settings.requireArticle;
+    }
+}
+
+function updateSettings() {
+    settings.showArticle = document.getElementById('show-article').checked;
+    settings.requireArticle = document.getElementById('require-article').checked;
+    
+    // If requiring article input, hide article display
+    if (settings.requireArticle) {
+        settings.showArticle = false;
+        document.getElementById('show-article').checked = false;
+    }
+    
+    localStorage.setItem('nounSettings', JSON.stringify(settings));
+    
+    // Update display if word is loaded
+    if (currentNoun) {
+        displayWord();
+    }
+}
+
+function displayWord() {
+    const display = document.getElementById('word-display');
+    const articleContainer = document.getElementById('article-input-container');
+    
+    if (settings.showArticle) {
+        display.textContent = `${currentNoun.article} ${currentNoun.word}`;
+        articleContainer.style.display = 'none';
+    } else if (settings.requireArticle) {
+        display.textContent = currentNoun.word;
+        articleContainer.style.display = 'block';
+    } else {
+        display.textContent = currentNoun.word;
+        articleContainer.style.display = 'none';
+    }
+}
+
+async function startPractice() {
+    document.getElementById('start-screen').style.display = 'none';
+    document.getElementById('practice-card').style.display = 'block';
+    await loadNextWord();
+}
+
+async function loadNextWord() {
+    try {
+        const excludeParam = seenIds.length > 0 ? `?exclude_ids=${seenIds.join(',')}` : '';
+        const response = await fetch(`/api/nouns/random${excludeParam}`);
+        
+        if (!response.ok) {
+            // Reset if no more words
+            seenIds = [];
+            return loadNextWord();
+        }
+        
+        currentNoun = await response.json();
+        seenIds.push(currentNoun.id);
+        
+        // Keep only last MAX_SEEN ids
+        if (seenIds.length > MAX_SEEN) {
+            seenIds = seenIds.slice(-MAX_SEEN);
+        }
+        
+        displayWord();
+        
+        // Reset form
+        document.getElementById('answer-form').reset();
+        document.getElementById('feedback').style.display = 'none';
+        document.getElementById('submit-btn').style.display = 'inline-block';
+        document.getElementById('next-btn').style.display = 'none';
+        document.getElementById('translation-input').focus();
+    } catch (error) {
+        console.error('Error loading word:', error);
+    }
+}
+
+async function checkAnswer(event) {
+    event.preventDefault();
+    
+    const articleInput = document.getElementById('article-input').value;
+    const translationInput = document.getElementById('translation-input').value;
+    
+    try {
+        const response = await fetch(`/api/nouns/${currentNoun.id}/check`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                article: articleInput,
+                translation: translationInput
+            })
+        });
+        
+        const result = await response.json();
+        
+        // Update stats
+        totalCount++;
+        if (result.all_correct) {
+            correctCount++;
+        }
+        document.getElementById('correct-count').textContent = correctCount;
+        document.getElementById('total-count').textContent = totalCount;
+        
+        // Show feedback
+        const feedback = document.getElementById('feedback');
+        feedback.style.display = 'block';
+        
+        if (result.all_correct) {
+            feedback.style.background = 'var(--success)';
+            feedback.style.color = 'white';
+            feedback.innerHTML = '✅ Correct!';
+        } else {
+            feedback.style.background = 'var(--error)';
+            feedback.style.color = 'white';
+            let html = '❌ Incorrect<br><br>';
+            
+            if (!result.article_correct && settings.requireArticle) {
+                html += `Article: <strong>${result.correct_article}</strong><br>`;
+            }
+            
+            if (!result.translation_correct) {
+                html += `Correct translations: <strong>${result.correct_translations.join(', ')}</strong>`;
+            }
+            
+            feedback.innerHTML = html;
+        }
+        
+        // Show next button, hide submit
+        document.getElementById('submit-btn').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'inline-block';
+        
+    } catch (error) {
+        console.error('Error checking answer:', error);
+    }
+}
+
+function nextWord() {
+    loadNextWord();
+}
+
+// Initialize
+loadSettings();
+</script>
+{% endblock %}

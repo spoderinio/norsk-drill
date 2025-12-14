@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2 style="margin-bottom: 2rem;">Admin Panel</h2>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+    <div class="card">
+        <h3 style="margin-bottom: 1rem;">📚 Nouns</h3>
+        <p style="color: var(--text-secondary); margin-bottom: 1rem;">{{ noun_count }} items</p>
+        <a href="/admin/nouns" class="btn">Manage Nouns</a>
+    </div>
+
+    <div class="card">
+        <h3 style="margin-bottom: 1rem;">🏃 Verbs</h3>
+        <p style="color: var(--text-secondary); margin-bottom: 1rem;">{{ verb_count }} items</p>
+        <a href="/admin/verbs" class="btn">Manage Verbs</a>
+    </div>
+
+    <div class="card">
+        <h3 style="margin-bottom: 1rem;">✨ Adjectives</h3>
+        <p style="color: var(--text-secondary); margin-bottom: 1rem;">{{ adjective_count }} items</p>
+        <a href="/admin/adjectives" class="btn">Manage Adjectives</a>
+    </div>
+</div>
+
+<div class="card" style="margin-top: 2rem;">
+    <h3 style="margin-bottom: 1rem;">Quick Import</h3>
+    <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+        Import nouns using the format: <code>et intervju – интервю</code>
+    </p>
+    <a href="/admin/nouns" class="btn">Go to Import</a>
+</div>
+{% endblock %}

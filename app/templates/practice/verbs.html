@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="max-width: 700px; margin: 0 auto;">
+    <h2 style="margin-bottom: 2rem;">Practice Verbs</h2>
+
+    <div class="card" id="practice-card" style="display: none;">
+        <!-- Group Info Badge -->
+        <div id="group-badge" style="background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 0.5rem; padding: 1rem; margin-bottom: 1.5rem; display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: start; gap: 1rem;">
+                <div style="flex: 1;">
+                    <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; margin-bottom: 0.25rem;">
+                        ГРУПА
+                    </div>
+                    <div id="group-number" style="font-size: 1.5rem; font-weight: 700; color: var(--accent); margin-bottom: 0.5rem;"></div>
+                    <div id="group-desc" style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Translation Display -->
+        <div id="translation-display" style="background: var(--bg-tertiary); border-left: 3px solid var(--accent); padding: 1rem; margin-bottom: 1.5rem; border-radius: 0.25rem; display: none;">
+            <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; margin-bottom: 0.5rem;">
+                ПРЕВОД
+            </div>
+            <div id="translation-text" style="font-size: 1.1rem; font-weight: 500;"></div>
+        </div>
+
+        <!-- Word Display -->
+        <div id="word-display" style="font-size: 2.5rem; font-weight: 700; margin-bottom: 2rem; text-align: center; color: var(--accent);"></div>
+
+        <form id="answer-form" onsubmit="checkAnswer(event);">
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Presens (сегашно време):</label>
+                <input type="text" id="presens-input" placeholder="Present tense">
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Preteritum (минало свършено време):</label>
+                <input type="text" id="preteritum-input" placeholder="Past tense">
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Perfektum (минало несвършено време):</label>
+                <input type="text" id="perfect-input" placeholder="Perfect participle">
+            </div>
+
+            <div id="feedback" style="margin-bottom: 1rem; padding: 1rem; border-radius: 0.5rem; display: none;"></div>
+
+            <div style="display: flex; gap: 1rem;">
+                <button type="submit" class="btn" id="submit-btn">Check Answer</button>
+                <button type="button" class="btn btn-secondary" onclick="nextWord()" id="next-btn" style="display: none;">Next Word</button>
+            </div>
+        </form>
+    </div>
+
+    <div id="start-screen" class="card" style="text-align: center;">
+        <button class="btn" onclick="startPractice()" style="font-size: 1.2rem; padding: 1.5rem 2rem;">
+            Start Practice
+        </button>
+    </div>
+
+    <div id="stats" style="margin-top: 2rem; text-align: center; color: var(--text-secondary);">
+        <span id="correct-count">0</span> correct | 
+        <span id="total-count">0</span> total
+    </div>
+</div>
+
+<script>
+let currentVerb = null;
+let seenIds = [];
+let correctCount = 0;
+let totalCount = 0;
+
+async function startPractice() {
+    document.getElementById('start-screen').style.display = 'none';
+    document.getElementById('practice-card').style.display = 'block';
+    await loadNextWord();
+}
+
+async function loadNextWord() {
+    try {
+        const excludeParam = seenIds.length > 0 ? `?exclude_ids=${seenIds.join(',')}` : '';
+        const response = await fetch(`/api/verbs/random${excludeParam}`);
+        
+        if (!response.ok) {
+            seenIds = [];
+            return loadNextWord();
+        }
+        
+        currentVerb = await response.json();
+        seenIds.push(currentVerb.id);
+        
+        if (seenIds.length > 50) {
+            seenIds = seenIds.slice(-50);
+        }
+        
+        // Display word
+        document.getElementById('word-display').textContent = currentVerb.infinitive;
+        
+        // Display group info
+        const groupBadge = document.getElementById('group-badge');
+        const groupNumber = document.getElementById('group-number');
+        const groupDesc = document.getElementById('group-desc');
+        
+        if (currentVerb.group) {
+            groupBadge.style.display = 'block';
+            groupNumber.textContent = currentVerb.group === 'неправилни' ? 'Неправилни глаголи' : `Група ${currentVerb.group}`;
+            groupDesc.textContent = currentVerb.group_description || '';
+        } else {
+            groupBadge.style.display = 'none';
+        }
+        
+        // Display translation
+        const translationDisplay = document.getElementById('translation-display');
+        const translationText = document.getElementById('translation-text');
+        
+        if (currentVerb.translations && currentVerb.translations.length > 0) {
+            translationDisplay.style.display = 'block';
+            translationText.textContent = currentVerb.translations.join(', ');
+        } else {
+            translationDisplay.style.display = 'none';
+        }
+        
+        // Reset form
+        document.getElementById('answer-form').reset();
+        document.getElementById('feedback').style.display = 'none';
+        document.getElementById('submit-btn').style.display = 'inline-block';
+        document.getElementById('next-btn').style.display = 'none';
+        document.getElementById('presens-input').focus();
+    } catch (error) {
+        console.error('Error loading word:', error);
+    }
+}
+
+async function checkAnswer(event) {
+    event.preventDefault();
+    
+    try {
+        const response = await fetch(`/api/verbs/${currentVerb.id}/check`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                presens: document.getElementById('presens-input').value,
+                preteritum: document.getElementById('preteritum-input').value,
+                perfect_participle: document.getElementById('perfect-input').value
+            })
+        });
+        
+        const result = await response.json();
+        
+        totalCount++;
+        if (result.all_correct) correctCount++;
+        document.getElementById('correct-count').textContent = correctCount;
+        document.getElementById('total-count').textContent = totalCount;
+        
+        const feedback = document.getElementById('feedback');
+        feedback.style.display = 'block';
+        
+        if (result.all_correct) {
+            feedback.style.background = 'var(--success)';
+            feedback.style.color = 'white';
+            feedback.innerHTML = '✅ Correct!';
+        } else {
+            feedback.style.background = 'var(--error)';
+            feedback.style.color = 'white';
+            let html = '❌ Incorrect<br><br>';
+            
+            if (!result.presens_correct) {
+                html += `<strong>Presens:</strong> ${result.correct_presens || '(не е попълнен)'}<br>`;
+            }
+            
+            if (!result.preteritum_correct) {
+                html += `<strong>Preteritum:</strong> ${result.correct_preteritum || '(не е попълнен)'}<br>`;
+            }
+            
+            if (!result.perfect_correct) {
+                html += `<strong>Perfektum:</strong> ${result.correct_perfect || '(не е попълнен)'}`;
+            }
+            
+            feedback.innerHTML = html;
+        }
+        
+        document.getElementById('submit-btn').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'inline-block';
+        
+    } catch (error) {
+        console.error('Error checking answer:', error);
+    }
+}
+
+function nextWord() {
+    loadNextWord();
+}
+</script>
+{% endblock %}
