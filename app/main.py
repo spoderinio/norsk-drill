@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 from app.db import init_db
-from app.routers import practice, admin
+from app.routers import practice, admin, search
 
 
 @asynccontextmanager
@@ -32,6 +32,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 # Include routers
 app.include_router(practice.router)
 app.include_router(admin.router)
+app.include_router(search.router)  # NEW
 
 
 if __name__ == "__main__":
