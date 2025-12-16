@@ -81,6 +81,7 @@ async def import_nouns_text(
     return RedirectResponse(url="/admin/nouns", status_code=303)
 
 
+
 @router.post("/nouns/import-csv")
 async def import_nouns_csv(
     file: UploadFile = File(...),
@@ -91,21 +92,40 @@ async def import_nouns_csv(
     text = content.decode('utf-8')
     reader = csv.DictReader(io.StringIO(text))
     
-    count = 0
+    added = 0
+    skipped = 0
+    
     for row in reader:
         article = row.get('article', '').strip()
         word = row.get('word', '').strip()
         trans_str = row.get('translations', '').strip()
+        definite = row.get('definite', '').strip() or None
+        plural = row.get('plural', '').strip() or None
         
         if not article or not word or article not in ['en', 'ei', 'et']:
             continue
         
-        translations = [t.strip() for t in trans_str.split(',')]
-        await crud.create_noun(db, article, word, translations)
-        count += 1
+        # Parse translations (can be separated by | or ,)
+        if '|' in trans_str:
+            translations = [t.strip() for t in trans_str.split('|')]
+        else:
+            translations = [t.strip() for t in trans_str.split(',')]
+        
+        result = await crud.create_noun(
+            db, 
+            article, 
+            word, 
+            translations,
+            definite=definite,
+            plural=plural
+        )
+        
+        if result:
+            added += 1
+        else:
+            skipped += 1
     
     return RedirectResponse(url="/admin/nouns", status_code=303)
-
 
 @router.post("/nouns/{noun_id}/delete")
 async def delete_noun(noun_id: int, db: AsyncSession = Depends(get_db)):
@@ -184,7 +204,9 @@ async def import_verbs_csv(
     text = content.decode('utf-8')
     reader = csv.DictReader(io.StringIO(text))
     
-    count = 0
+    added = 0
+    skipped = 0
+    
     for row in reader:
         infinitive = row.get('infinitive', '').strip()
         presens = row.get('presens', '').strip() or None
@@ -203,7 +225,7 @@ async def import_verbs_csv(
         else:
             translations = [t.strip() for t in trans_str.split(',')]
         
-        await crud.create_verb(
+        result = await crud.create_verb(
             db,
             infinitive=infinitive,
             presens=presens,
@@ -213,7 +235,11 @@ async def import_verbs_csv(
             group=group,
             group_description=group_desc
         )
-        count += 1
+        
+        if result:
+            added += 1
+        else:
+            skipped += 1
     
     return RedirectResponse(url="/admin/verbs", status_code=303)
 
@@ -293,7 +319,9 @@ async def import_adjectives_csv(
     text = content.decode('utf-8')
     reader = csv.DictReader(io.StringIO(text))
     
-    count = 0
+    added = 0
+    skipped = 0
+    
     for row in reader:
         base = row.get('base', '').strip()
         neuter = row.get('neuter', '').strip() or None
@@ -311,7 +339,7 @@ async def import_adjectives_csv(
         else:
             translations = [t.strip() for t in trans_str.split(',')]
         
-        await crud.create_adjective(
+        result = await crud.create_adjective(
             db,
             base=base,
             neuter=neuter,
@@ -320,7 +348,11 @@ async def import_adjectives_csv(
             group=group,
             group_description=group_desc
         )
-        count += 1
+        
+        if result:
+            added += 1
+        else:
+            skipped += 1
     
     return RedirectResponse(url="/admin/adjectives", status_code=303)
 

@@ -42,8 +42,24 @@ async def get_random_noun(
     return random.choice(nouns) if nouns else None
 
 
-async def create_noun(db: AsyncSession, article: str, word: str, translations: List[str], **kwargs) -> Noun:
-    """Create a new noun."""
+async def find_noun_by_word(db: AsyncSession, article: str, word: str) -> Optional[Noun]:
+    """Find a noun by article and word."""
+    result = await db.execute(
+        select(Noun).where(
+            Noun.article == article,
+            Noun.word == word
+        )
+    )
+    return result.scalar_one_or_none()
+
+
+async def create_noun(db: AsyncSession, article: str, word: str, translations: List[str], **kwargs) -> Optional[Noun]:
+    """Create a new noun. Returns None if duplicate exists."""
+    # Check for duplicate
+    existing = await find_noun_by_word(db, article, word)
+    if existing:
+        return None  # Duplicate - skip
+    
     noun = Noun(
         article=article,
         word=word,
@@ -105,16 +121,29 @@ async def get_random_verb(
     return random.choice(verbs) if verbs else None
 
 
-async def create_verb(db: AsyncSession, infinitive: str, translations: List[str], **kwargs) -> Verb:
-    """Create a new verb."""
+async def find_verb_by_infinitive(db: AsyncSession, infinitive: str) -> Optional[Verb]:
+    """Find a verb by infinitive form."""
+    result = await db.execute(
+        select(Verb).where(Verb.infinitive == infinitive)
+    )
+    return result.scalar_one_or_none()
+
+
+async def create_verb(db: AsyncSession, infinitive: str, translations: List[str], **kwargs) -> Optional[Verb]:
+    """Create a new verb. Returns None if duplicate exists."""
+    # Check for duplicate
+    existing = await find_verb_by_infinitive(db, infinitive)
+    if existing:
+        return None  # Duplicate - skip
+    
     verb = Verb(
         infinitive=infinitive,
         presens=kwargs.get('presens'),
         preteritum=kwargs.get('preteritum'),
         perfect_participle=kwargs.get('perfect_participle'),
         translations=translations,
-        group=kwargs.get('group'),  # NEW
-        group_description=kwargs.get('group_description'),  # NEW
+        group=kwargs.get('group'),
+        group_description=kwargs.get('group_description'),
         tags=kwargs.get('tags'),
         level=kwargs.get('level')
     )
@@ -170,8 +199,21 @@ async def get_random_adjective(
     return random.choice(adjectives) if adjectives else None
 
 
-async def create_adjective(db: AsyncSession, base: str, translations: List[str], **kwargs) -> Adjective:
-    """Create a new adjective."""
+async def find_adjective_by_base(db: AsyncSession, base: str) -> Optional[Adjective]:
+    """Find an adjective by base form."""
+    result = await db.execute(
+        select(Adjective).where(Adjective.base == base)
+    )
+    return result.scalar_one_or_none()
+
+
+async def create_adjective(db: AsyncSession, base: str, translations: List[str], **kwargs) -> Optional[Adjective]:
+    """Create a new adjective. Returns None if duplicate exists."""
+    # Check for duplicate
+    existing = await find_adjective_by_base(db, base)
+    if existing:
+        return None  # Duplicate - skip
+    
     adjective = Adjective(
         base=base,
         neuter=kwargs.get('neuter'),
@@ -179,8 +221,8 @@ async def create_adjective(db: AsyncSession, base: str, translations: List[str],
         comparative=kwargs.get('comparative'),
         superlative=kwargs.get('superlative'),
         translations=translations,
-        group=kwargs.get('group'),  # NEW
-        group_description=kwargs.get('group_description'),  # NEW
+        group=kwargs.get('group'),
+        group_description=kwargs.get('group_description'),
         tags=kwargs.get('tags'),
         level=kwargs.get('level')
     )
