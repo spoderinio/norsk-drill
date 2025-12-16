@@ -4,12 +4,26 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional
+import re
 
 from app.db import get_db
 from app import crud
 
 router = APIRouter(tags=["practice"])
 templates = Jinja2Templates(directory="app/templates")
+
+
+def normalize_translation(text: str) -> str:
+    """
+    Normalize translation by removing text in parentheses and cleaning up.
+    
+    Example: "време (навън)" -> "време"
+    """
+    # Remove text in parentheses
+    text = re.sub(r'\s*\([^)]*\)', '', text)
+    # Clean up extra spaces
+    text = ' '.join(text.split())
+    return text.lower().strip()
 
 
 @router.get("/", response_class=HTMLResponse)
@@ -84,12 +98,12 @@ async def check_noun_answer(
     if article and article.strip():
         result["article_correct"] = article.lower().strip() == noun.article.lower()
     
-    # Check translation
+    # Check translation (with normalization to ignore parentheses)
     translation = body.get('translation')
     if translation and translation.strip():
-        user_trans = translation.lower().strip()
+        user_trans = normalize_translation(translation)
         for correct_trans in translations:
-            if user_trans == correct_trans.lower().strip():
+            if user_trans == normalize_translation(correct_trans):
                 result["translation_correct"] = True
                 result["matched_translation"] = correct_trans
                 break
@@ -179,10 +193,13 @@ async def check_verb_answer(
     if perfect and perfect.strip() and verb.perfect_participle:
         result["perfect_correct"] = perfect.lower().strip() == verb.perfect_participle.lower().strip()
     
+    # Check translation (with normalization to ignore parentheses)
     translation = body.get('translation')
     if translation and translation.strip():
-        user_trans = translation.lower().strip()
-        result["translation_correct"] = any(user_trans == t.lower().strip() for t in translations)
+        user_trans = normalize_translation(translation)
+        result["translation_correct"] = any(
+            user_trans == normalize_translation(t) for t in translations
+        )
     
     result["all_correct"] = all([
         result["presens_correct"],
@@ -264,10 +281,13 @@ async def check_adjective_answer(
     if plural and plural.strip() and adj.plural:
         result["plural_correct"] = plural.lower().strip() == adj.plural.lower().strip()
     
+    # Check translation (with normalization to ignore parentheses)
     translation = body.get('translation')
     if translation and translation.strip():
-        user_trans = translation.lower().strip()
-        result["translation_correct"] = any(user_trans == t.lower().strip() for t in translations)
+        user_trans = normalize_translation(translation)
+        result["translation_correct"] = any(
+            user_trans == normalize_translation(t) for t in translations
+        )
     
     result["all_correct"] = all([
         result["neuter_correct"],
