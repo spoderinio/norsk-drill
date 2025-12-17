@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto;">
+    <h2>✏️ Edit Adjective</h2>
+    
+    <div class="card" style="margin-top: 2rem;">
+        <form method="POST" action="/admin/adjectives/{{ adjective.id }}/edit">
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                    Base form *
+                </label>
+                <input 
+                    type="text" 
+                    name="base" 
+                    value="{{ adjective.base }}"
+                    required
+                    placeholder="stor"
+                >
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                    Neuter form
+                </label>
+                <input 
+                    type="text" 
+                    name="neuter" 
+                    value="{{ adjective.neuter or '' }}"
+                    placeholder="stort"
+                >
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                    Plural form
+                </label>
+                <input 
+                    type="text" 
+                    name="plural" 
+                    value="{{ adjective.plural or '' }}"
+                    placeholder="store"
+                >
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                    Translations * (separated by |)
+                </label>
+                <input 
+                    type="text" 
+                    name="translations" 
+                    value="{{ '|'.join(adjective.translations) if adjective.translations else '' }}"
+                    required
+                    placeholder="голям|едър"
+                >
+                <small style="color: var(--text-secondary); display: block; margin-top: 0.25rem;">
+                    Use | to separate multiple translations
+                </small>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                    Group
+                </label>
+                <input 
+                    type="text" 
+                    name="group" 
+                    value="{{ adjective.group or '' }}"
+                    placeholder="Група 1"
+                >
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                    Group Description
+                </label>
+                <textarea 
+                    name="group_description" 
+                    rows="3"
+                    placeholder="I-ва група: Regular adjectives..."
+                >{{ adjective.group_description or '' }}</textarea>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="submit" class="btn">
+                    💾 Save Changes
+                </button>
+                <a href="/admin/adjectives" class="btn btn-secondary" style="text-decoration: none;">
+                    ❌ Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto;">
+    <h2>✏️ Edit Noun</h2>
+    
+    <div class="card" style="margin-top: 2rem;">
+        <form method="POST" action="/admin/nouns/{{ noun.id }}/edit">
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                    Article *
+                </label>
+                <select name="article" required style="width: 100%;">
+                    <option value="en" {% if noun.article == 'en' %}selected{% endif %}>en</option>
+                    <option value="ei" {% if noun.article == 'ei' %}selected{% endif %}>ei</option>
+                    <option value="et" {% if noun.article == 'et' %}selected{% endif %}>et</option>
+                </select>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                    Word *
+                </label>
+                <input 
+                    type="text" 
+                    name="word" 
+                    value="{{ noun.word }}"
+                    required
+                    placeholder="bil"
+                >
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                    Definite form
+                </label>
+                <input 
+                    type="text" 
+                    name="definite" 
+                    value="{{ noun.definite or '' }}"
+                    placeholder="bilen"
+                >
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                    Plural form
+                </label>
+                <input 
+                    type="text" 
+                    name="plural" 
+                    value="{{ noun.plural or '' }}"
+                    placeholder="biler"
+                >
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                    Translations * (separated by |)
+                </label>
+                <input 
+                    type="text" 
+                    name="translations" 
+                    value="{{ '|'.join(noun.translations) if noun.translations else '' }}"
+                    required
+                    placeholder="кола|автомобил"
+                >
+                <small style="color: var(--text-secondary); display: block; margin-top: 0.25rem;">
+                    Use | to separate multiple translations
+                </small>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="submit" class="btn">
+                    💾 Save Changes
+                </button>
+                <a href="/admin/nouns" class="btn btn-secondary" style="text-decoration: none;">
+                    ❌ Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

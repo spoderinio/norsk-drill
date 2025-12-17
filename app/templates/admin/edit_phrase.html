@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto;">
+    <h2>✏️ Edit Phrase</h2>
+    
+    <div class="card" style="margin-top: 2rem;">
+        <form method="POST" action="/admin/phrases/{{ phrase.id }}/edit">
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                    Norwegian Phrase *
+                </label>
+                <input 
+                    type="text" 
+                    name="norwegian" 
+                    value="{{ phrase.norwegian }}"
+                    required
+                    placeholder="om våren"
+                >
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                    Translations * (separated by |)
+                </label>
+                <input 
+                    type="text" 
+                    name="translations" 
+                    value="{{ '|'.join(phrase.translations) if phrase.translations else '' }}"
+                    required
+                    placeholder="през пролетта"
+                >
+                <small style="color: var(--text-secondary); display: block; margin-top: 0.25rem;">
+                    Use | to separate multiple translations
+                </small>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                    Category
+                </label>
+                <input 
+                    type="text" 
+                    name="category" 
+                    value="{{ phrase.category or '' }}"
+                    placeholder="time, weather, greetings..."
+                >
+                <small style="color: var(--text-secondary); display: block; margin-top: 0.25rem;">
+                    Optional: time, weather, greetings, food, etc.
+                </small>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                    Notes
+                </label>
+                <textarea 
+                    name="notes" 
+                    rows="3"
+                    placeholder="Additional context or explanation..."
+                >{{ phrase.notes or '' }}</textarea>
+                <small style="color: var(--text-secondary); display: block; margin-top: 0.25rem;">
+                    Optional: Add context or usage notes
+                </small>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="submit" class="btn">
+                    💾 Save Changes
+                </button>
+                <a href="/admin/phrases" class="btn btn-secondary" style="text-decoration: none;">
+                    ❌ Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

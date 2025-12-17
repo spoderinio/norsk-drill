@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto;">
+    <h2>✏️ Edit Verb</h2>
+    
+    <div class="card" style="margin-top: 2rem;">
+        <form method="POST" action="/admin/verbs/{{ verb.id }}/edit">
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                    Infinitive *
+                </label>
+                <input 
+                    type="text" 
+                    name="infinitive" 
+                    value="{{ verb.infinitive }}"
+                    required
+                    placeholder="å være"
+                >
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                    Presens
+                </label>
+                <input 
+                    type="text" 
+                    name="presens" 
+                    value="{{ verb.presens or '' }}"
+                    placeholder="er"
+                >
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                    Preteritum
+                </label>
+                <input 
+                    type="text" 
+                    name="preteritum" 
+                    value="{{ verb.preteritum or '' }}"
+                    placeholder="var"
+                >
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                    Perfektum
+                </label>
+                <input 
+                    type="text" 
+                    name="perfect" 
+                    value="{{ verb.perfect_participle or '' }}"
+                    placeholder="vært"
+                >
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                    Translations * (separated by |)
+                </label>
+                <input 
+                    type="text" 
+                    name="translations" 
+                    value="{{ '|'.join(verb.translations) if verb.translations else '' }}"
+                    required
+                    placeholder="съм|бъда"
+                >
+                <small style="color: var(--text-secondary); display: block; margin-top: 0.25rem;">
+                    Use | to separate multiple translations
+                </small>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                    Group
+                </label>
+                <input 
+                    type="text" 
+                    name="group" 
+                    value="{{ verb.group or '' }}"
+                    placeholder="неправилни"
+                >
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                    Group Description
+                </label>
+                <textarea 
+                    name="group_description" 
+                    rows="3"
+                    placeholder="Неправилни глаголи..."
+                >{{ verb.group_description or '' }}</textarea>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="submit" class="btn">
+                    💾 Save Changes
+                </button>
+                <a href="/admin/verbs" class="btn btn-secondary" style="text-decoration: none;">
+                    ❌ Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

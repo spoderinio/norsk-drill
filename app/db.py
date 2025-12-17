@@ -31,8 +31,8 @@ class Verb(Base):
     preteritum = Column(String(200), nullable=True)
     perfect_participle = Column(String(200), nullable=True)
     translations = Column(JSON, nullable=False)
-    group = Column(String(20), nullable=True)  # NEW: 1, 2, 3, 4, неправилни, etc.
-    group_description = Column(String(500), nullable=True)  # NEW: Description of the group rule
+    group = Column(String(100), nullable=True)  # NEW: "1", "2а", "2б", "3", "4", "неправилни"
+    group_description = Column(Text, nullable=True)  # NEW: Grammar explanation
     tags = Column(String(500), nullable=True)
     level = Column(String(10), nullable=True)
 
@@ -48,8 +48,21 @@ class Adjective(Base):
     comparative = Column(String(200), nullable=True)
     superlative = Column(String(200), nullable=True)
     translations = Column(JSON, nullable=False)
-    group = Column(String(20), nullable=True)  # NEW: 1, 1c, 2a, 3a, 4, special, etc.
-    group_description = Column(String(500), nullable=True)  # NEW: Description of the group rule
+    group = Column(String(100), nullable=True)  # NEW: "Група 1", "Група 2", etc.
+    group_description = Column(Text, nullable=True)  # NEW: Grammar explanation
+    tags = Column(String(500), nullable=True)
+    level = Column(String(10), nullable=True)
+
+
+class Phrase(Base):
+    """Norwegian phrase/expression model."""
+    __tablename__ = "phrases"
+
+    id = Column(Integer, primary_key=True, index=True)
+    norwegian = Column(String(500), nullable=False, index=True)  # The phrase in Norwegian
+    translations = Column(JSON, nullable=False)  # List of Bulgarian translations
+    category = Column(String(100), nullable=True)  # "time", "weather", "greetings", etc.
+    notes = Column(Text, nullable=True)  # Additional notes/context
     tags = Column(String(500), nullable=True)
     level = Column(String(10), nullable=True)
 

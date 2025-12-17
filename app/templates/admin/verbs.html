@@ -7,31 +7,15 @@
 <div class="card" style="margin-bottom: 2rem;">
     <h3 style="margin-bottom: 1rem;">Import Verbs</h3>
     
-    <div style="margin-bottom: 2rem;">
-        <h4 style="margin-bottom: 0.5rem;">Import from Text</h4>
-        <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9rem;">
-            Format: <code>infinitive, presens, preteritum, perfect – translation1, translation2</code><br>
-            Example: <code>å være, er, var, vært – съм, бъда</code>
-        </p>
-        <form action="/admin/verbs/import-text" method="POST">
-            <textarea name="text_data" rows="10" placeholder="Paste your text here (one verb per line)" style="margin-bottom: 1rem;"></textarea>
-            <button type="submit" class="btn">Import Text</button>
-        </form>
-    </div>
-
     <div>
-        <h4 style="margin-bottom: 0.5rem;">Import from CSV (with Groups)</h4>
+        <h4 style="margin-bottom: 0.5rem;">Import from CSV</h4>
         <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9rem;">
-            CSV with columns: <code>infinitive,presens,preteritum,perfect,translation,group,group_description</code><br>
-            Translations can be separated by <code>|</code> or <code>,</code>
+            CSV with columns: <code>infinitive,presens,preteritum,perfect,translations,group,group_description</code>
         </p>
         <form action="/admin/verbs/import-csv" method="POST" enctype="multipart/form-data">
             <input type="file" name="file" accept=".csv" style="margin-bottom: 1rem;">
             <button type="submit" class="btn">Import CSV</button>
         </form>
-        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.5rem;">
-            💡 Download the ready CSV file: <a href="/static/verbs_with_groups_BG.csv" style="color: var(--accent);" download>verbs_with_groups_BG.csv</a>
-        </p>
     </div>
 </div>
 
@@ -49,8 +33,7 @@
                     <th style="padding: 0.75rem; text-align: left;">Preteritum</th>
                     <th style="padding: 0.75rem; text-align: left;">Perfect</th>
                     <th style="padding: 0.75rem; text-align: left;">Translations</th>
-                    <th style="padding: 0.75rem; text-align: left;">Group</th>
-                    <th style="padding: 0.75rem; text-align: left;">Actions</th>
+                    <th style="padding: 0.75rem; text-align: right;">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -60,20 +43,14 @@
                     <td style="padding: 0.75rem;">{{ verb.presens or '-' }}</td>
                     <td style="padding: 0.75rem;">{{ verb.preteritum or '-' }}</td>
                     <td style="padding: 0.75rem;">{{ verb.perfect_participle or '-' }}</td>
-                    <td style="padding: 0.75rem;">{{ verb.translations|join(', ') }}</td>
-                    <td style="padding: 0.75rem;">
-                        {% if verb.group %}
-                        <span style="background: var(--accent); color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.85rem; font-weight: 600;">
-                            {{ verb.group }}
-                        </span>
-                        {% else %}
-                        <span style="color: var(--text-secondary);">-</span>
-                        {% endif %}
-                    </td>
-                    <td style="padding: 0.75rem;">
+                    <td style="padding: 0.75rem;">{{ verb.translations|join(', ') if verb.translations else '' }}</td>
+                    <td style="padding: 0.75rem; text-align: right;">
+                        <a href="/admin/verbs/{{ verb.id }}/edit" style="background: var(--accent); color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 0.25rem; text-decoration: none; display: inline-block; margin-right: 0.5rem;">
+                            ✏️ Edit
+                        </a>
                         <form action="/admin/verbs/{{ verb.id }}/delete" method="POST" style="display: inline;" onsubmit="return confirm('Delete this verb?');">
                             <button type="submit" style="background: var(--error); color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 0.25rem; cursor: pointer;">
-                                Delete
+                                🗑️ Delete
                             </button>
                         </form>
                     </td>

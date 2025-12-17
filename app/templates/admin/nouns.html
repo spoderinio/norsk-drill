@@ -7,21 +7,10 @@
 <div class="card" style="margin-bottom: 2rem;">
     <h3 style="margin-bottom: 1rem;">Import Nouns</h3>
     
-    <div style="margin-bottom: 2rem;">
-        <h4 style="margin-bottom: 0.5rem;">Import from Text</h4>
-        <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9rem;">
-            Format: <code>et intervju – интервю</code> or <code>en sjanse – шанс, възможност</code>
-        </p>
-        <form action="/admin/nouns/import-text" method="POST">
-            <textarea name="text_data" rows="10" placeholder="Paste your text here (one word per line)" style="margin-bottom: 1rem;"></textarea>
-            <button type="submit" class="btn">Import Text</button>
-        </form>
-    </div>
-
     <div>
         <h4 style="margin-bottom: 0.5rem;">Import from CSV</h4>
         <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9rem;">
-            CSV with columns: <code>article,word,translations</code>
+            CSV with columns: <code>article,word,definite,plural,translations</code>
         </p>
         <form action="/admin/nouns/import-csv" method="POST" enctype="multipart/form-data">
             <input type="file" name="file" accept=".csv" style="margin-bottom: 1rem;">
@@ -42,7 +31,7 @@
                     <th style="padding: 0.75rem; text-align: left;">Article</th>
                     <th style="padding: 0.75rem; text-align: left;">Word</th>
                     <th style="padding: 0.75rem; text-align: left;">Translations</th>
-                    <th style="padding: 0.75rem; text-align: left;">Actions</th>
+                    <th style="padding: 0.75rem; text-align: right;">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -50,11 +39,14 @@
                 <tr style="border-bottom: 1px solid var(--border);">
                     <td style="padding: 0.75rem;">{{ noun.article }}</td>
                     <td style="padding: 0.75rem; font-weight: 600;">{{ noun.word }}</td>
-                    <td style="padding: 0.75rem;">{{ noun.translations|join(', ') }}</td>
-                    <td style="padding: 0.75rem;">
+                    <td style="padding: 0.75rem;">{{ noun.translations|join(', ') if noun.translations else '' }}</td>
+                    <td style="padding: 0.75rem; text-align: right;">
+                        <a href="/admin/nouns/{{ noun.id }}/edit" style="background: var(--accent); color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 0.25rem; text-decoration: none; display: inline-block; margin-right: 0.5rem;">
+                            ✏️ Edit
+                        </a>
                         <form action="/admin/nouns/{{ noun.id }}/delete" method="POST" style="display: inline;" onsubmit="return confirm('Delete this noun?');">
                             <button type="submit" style="background: var(--error); color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 0.25rem; cursor: pointer;">
-                                Delete
+                                🗑️ Delete
                             </button>
                         </form>
                     </td>

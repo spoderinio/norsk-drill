@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="practice-container">
+    <h1>🗣️ Practice Phrases</h1>
+    
+    <div id="practice-card" class="card" style="display: none;">
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <div style="font-size: 2rem; font-weight: 700; color: var(--accent); margin-bottom: 0.5rem;">
+                PHRASE
+            </div>
+            <div id="norwegian-phrase" style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1rem;">
+                <!-- Norwegian phrase here -->
+            </div>
+            
+            <!-- Category badge -->
+            <div id="category-badge" style="display: inline-block; padding: 0.25rem 0.75rem; background: var(--card-bg); border-radius: 1rem; font-size: 0.875rem; margin-bottom: 1rem;">
+                <!-- Category here -->
+            </div>
+
+            <!-- Notes (if any) -->
+            <div id="notes-section" style="display: none; margin-top: 1rem; padding: 1rem; background: var(--card-bg); border-radius: 0.5rem; font-size: 0.875rem; color: var(--text-secondary);">
+                💡 <span id="phrase-notes"></span>
+            </div>
+        </div>
+
+        <form id="answer-form" onsubmit="checkAnswer(event)">
+            <div style="margin-bottom: 1.5rem;">
+                <label for="translation-input" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                    Translation
+                </label>
+                <input 
+                    type="text" 
+                    id="translation-input" 
+                    name="translation"
+                    autocomplete="off"
+                    placeholder="Enter Bulgarian translation"
+                    required
+                >
+            </div>
+
+            <button type="submit" class="btn" style="width: 100%;">
+                Check Answer
+            </button>
+        </form>
+
+        <div id="feedback" style="display: none; margin-top: 1.5rem;"></div>
+
+        <button id="next-btn" class="btn btn-secondary" onclick="loadNextPhrase()" style="display: none; width: 100%; margin-top: 1rem;">
+            Next Phrase →
+        </button>
+    </div>
+
+    <div id="loading" style="text-align: center; padding: 3rem;">
+        Loading...
+    </div>
+
+    <div id="no-more" style="display: none; text-align: center; padding: 3rem;">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">🎉</div>
+        <h2>No more phrases!</h2>
+        <p style="margin-top: 1rem;">You've practiced all available phrases.</p>
+        <button class="btn" onclick="resetPractice()" style="margin-top: 1.5rem;">
+            Start Over
+        </button>
+    </div>
+</div>
+
+<script>
+let currentPhrase = null;
+let excludedIds = [];
+
+async function loadNextPhrase() {
+    document.getElementById('practice-card').style.display = 'none';
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('no-more').style.display = 'none';
+    
+    try {
+        const params = new URLSearchParams();
+        if (excludedIds.length > 0) {
+            params.append('exclude_ids', excludedIds.join(','));
+        }
+        {% if category %}
+        params.append('category', '{{ category }}');
+        {% endif %}
+        
+        const response = await fetch(`/api/phrases/random?${params}`);
+        
+        if (!response.ok) {
+            if (response.status === 404) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('no-more').style.display = 'block';
+                return;
+            }
+            throw new Error('Failed to load phrase');
+        }
+        
+        currentPhrase = await response.json();
+        displayPhrase();
+    } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('loading').innerHTML = '<p style="color: var(--error);">Error loading phrase</p>';
+    }
+}
+
+function displayPhrase() {
+    document.getElementById('norwegian-phrase').textContent = currentPhrase.norwegian;
+    
+    // Show category badge
+    if (currentPhrase.category) {
+        document.getElementById('category-badge').textContent = currentPhrase.category;
+        document.getElementById('category-badge').style.display = 'inline-block';
+    } else {
+        document.getElementById('category-badge').style.display = 'none';
+    }
+    
+    // Show notes if available
+    if (currentPhrase.notes) {
+        document.getElementById('phrase-notes').textContent = currentPhrase.notes;
+        document.getElementById('notes-section').style.display = 'block';
+    } else {
+        document.getElementById('notes-section').style.display = 'none';
+    }
+    
+    document.getElementById('translation-input').value = '';
+    document.getElementById('feedback').style.display = 'none';
+    document.getElementById('next-btn').style.display = 'none';
+    document.getElementById('answer-form').style.display = 'block';
+    
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('practice-card').style.display = 'block';
+    
+    document.getElementById('translation-input').focus();
+}
+
+async function checkAnswer(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
+    const answer = {
+        translation: formData.get('translation')
+    };
+    
+    try {
+        const response = await fetch(`/api/phrases/${currentPhrase.id}/check`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(answer)
+        });
+        
+        const result = await response.json();
+        displayFeedback(result);
+        
+        excludedIds.push(currentPhrase.id);
+        
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+function displayFeedback(result) {
+    const feedback = document.getElementById('feedback');
+    feedback.innerHTML = '';
+    
+    if (result.all_correct) {
+        feedback.innerHTML = `
+            <div style="padding: 1rem; background: var(--success-bg); border-left: 4px solid var(--success); border-radius: 0.5rem;">
+                <div style="font-weight: 600; color: var(--success); margin-bottom: 0.5rem;">✅ Correct!</div>
+            </div>
+        `;
+    } else {
+        feedback.innerHTML = `
+            <div style="padding: 1rem; background: var(--error-bg); border-left: 4px solid var(--error); border-radius: 0.5rem;">
+                <div style="font-weight: 600; color: var(--error); margin-bottom: 0.5rem;">❌ Incorrect</div>
+                <div style="color: var(--text-secondary); font-size: 0.875rem;">
+                    <strong>Correct:</strong> ${result.correct_translations.join(', ')}
+                </div>
+            </div>
+        `;
+    }
+    
+    feedback.style.display = 'block';
+    document.getElementById('answer-form').style.display = 'none';
+    document.getElementById('next-btn').style.display = 'block';
+}
+
+function resetPractice() {
+    excludedIds = [];
+    loadNextPhrase();
+}
+
+// Load first phrase on page load
+loadNextPhrase();
+</script>
+{% endblock %}

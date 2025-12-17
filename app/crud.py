@@ -3,10 +3,11 @@ import random
 from typing import List, Optional
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.db import Noun, Verb, Adjective, GrammarLesson
+from app.db import Noun, Verb, Adjective, Phrase, GrammarLesson
 
 
-# Nouns
+# ========== NOUNS ==========
+
 async def get_noun(db: AsyncSession, noun_id: int) -> Optional[Noun]:
     """Get a noun by ID."""
     result = await db.execute(select(Noun).where(Noun.id == noun_id))
@@ -75,6 +76,33 @@ async def create_noun(db: AsyncSession, article: str, word: str, translations: L
     return noun
 
 
+async def update_noun(db: AsyncSession, noun_id: int, **kwargs) -> Optional[Noun]:
+    """Update a noun. Returns None if not found."""
+    noun = await get_noun(db, noun_id)
+    if not noun:
+        return None
+    
+    # Update fields if provided
+    if 'article' in kwargs:
+        noun.article = kwargs['article']
+    if 'word' in kwargs:
+        noun.word = kwargs['word']
+    if 'definite' in kwargs:
+        noun.definite = kwargs['definite']
+    if 'plural' in kwargs:
+        noun.plural = kwargs['plural']
+    if 'translations' in kwargs:
+        noun.translations = kwargs['translations']
+    if 'tags' in kwargs:
+        noun.tags = kwargs['tags']
+    if 'level' in kwargs:
+        noun.level = kwargs['level']
+    
+    await db.commit()
+    await db.refresh(noun)
+    return noun
+
+
 async def delete_noun(db: AsyncSession, noun_id: int) -> bool:
     """Delete a noun."""
     noun = await get_noun(db, noun_id)
@@ -85,7 +113,8 @@ async def delete_noun(db: AsyncSession, noun_id: int) -> bool:
     return False
 
 
-# Verbs
+# ========== VERBS ==========
+
 async def get_verb(db: AsyncSession, verb_id: int) -> Optional[Verb]:
     """Get a verb by ID."""
     result = await db.execute(select(Verb).where(Verb.id == verb_id))
@@ -153,6 +182,37 @@ async def create_verb(db: AsyncSession, infinitive: str, translations: List[str]
     return verb
 
 
+async def update_verb(db: AsyncSession, verb_id: int, **kwargs) -> Optional[Verb]:
+    """Update a verb. Returns None if not found."""
+    verb = await get_verb(db, verb_id)
+    if not verb:
+        return None
+    
+    # Update fields if provided
+    if 'infinitive' in kwargs:
+        verb.infinitive = kwargs['infinitive']
+    if 'presens' in kwargs:
+        verb.presens = kwargs['presens']
+    if 'preteritum' in kwargs:
+        verb.preteritum = kwargs['preteritum']
+    if 'perfect_participle' in kwargs:
+        verb.perfect_participle = kwargs['perfect_participle']
+    if 'translations' in kwargs:
+        verb.translations = kwargs['translations']
+    if 'group' in kwargs:
+        verb.group = kwargs['group']
+    if 'group_description' in kwargs:
+        verb.group_description = kwargs['group_description']
+    if 'tags' in kwargs:
+        verb.tags = kwargs['tags']
+    if 'level' in kwargs:
+        verb.level = kwargs['level']
+    
+    await db.commit()
+    await db.refresh(verb)
+    return verb
+
+
 async def delete_verb(db: AsyncSession, verb_id: int) -> bool:
     """Delete a verb."""
     verb = await get_verb(db, verb_id)
@@ -163,7 +223,8 @@ async def delete_verb(db: AsyncSession, verb_id: int) -> bool:
     return False
 
 
-# Adjectives
+# ========== ADJECTIVES ==========
+
 async def get_adjective(db: AsyncSession, adj_id: int) -> Optional[Adjective]:
     """Get an adjective by ID."""
     result = await db.execute(select(Adjective).where(Adjective.id == adj_id))
@@ -232,6 +293,39 @@ async def create_adjective(db: AsyncSession, base: str, translations: List[str],
     return adjective
 
 
+async def update_adjective(db: AsyncSession, adj_id: int, **kwargs) -> Optional[Adjective]:
+    """Update an adjective. Returns None if not found."""
+    adj = await get_adjective(db, adj_id)
+    if not adj:
+        return None
+    
+    # Update fields if provided
+    if 'base' in kwargs:
+        adj.base = kwargs['base']
+    if 'neuter' in kwargs:
+        adj.neuter = kwargs['neuter']
+    if 'plural' in kwargs:
+        adj.plural = kwargs['plural']
+    if 'comparative' in kwargs:
+        adj.comparative = kwargs['comparative']
+    if 'superlative' in kwargs:
+        adj.superlative = kwargs['superlative']
+    if 'translations' in kwargs:
+        adj.translations = kwargs['translations']
+    if 'group' in kwargs:
+        adj.group = kwargs['group']
+    if 'group_description' in kwargs:
+        adj.group_description = kwargs['group_description']
+    if 'tags' in kwargs:
+        adj.tags = kwargs['tags']
+    if 'level' in kwargs:
+        adj.level = kwargs['level']
+    
+    await db.commit()
+    await db.refresh(adj)
+    return adj
+
+
 async def delete_adjective(db: AsyncSession, adj_id: int) -> bool:
     """Delete an adjective."""
     adjective = await get_adjective(db, adj_id)
@@ -242,7 +336,109 @@ async def delete_adjective(db: AsyncSession, adj_id: int) -> bool:
     return False
 
 
-# Grammar Lessons
+# ========== PHRASES ==========
+
+async def get_phrase(db: AsyncSession, phrase_id: int) -> Optional[Phrase]:
+    """Get a phrase by ID."""
+    result = await db.execute(select(Phrase).where(Phrase.id == phrase_id))
+    return result.scalar_one_or_none()
+
+
+async def get_all_phrases(db: AsyncSession, category: Optional[str] = None) -> List[Phrase]:
+    """Get all phrases, optionally filtered by category."""
+    query = select(Phrase)
+    if category:
+        query = query.where(Phrase.category == category)
+    result = await db.execute(query)
+    return result.scalars().all()
+
+
+async def get_random_phrase(
+    db: AsyncSession,
+    exclude_ids: List[int] = None,
+    category: Optional[str] = None
+) -> Optional[Phrase]:
+    """Get a random phrase, excluding specified IDs."""
+    query = select(Phrase)
+    
+    if category:
+        query = query.where(Phrase.category == category)
+    
+    if exclude_ids:
+        query = query.where(~Phrase.id.in_(exclude_ids))
+    
+    result = await db.execute(query)
+    phrases = result.scalars().all()
+    
+    return random.choice(phrases) if phrases else None
+
+
+async def find_phrase_by_norwegian(db: AsyncSession, norwegian: str) -> Optional[Phrase]:
+    """Find a phrase by Norwegian text."""
+    result = await db.execute(
+        select(Phrase).where(Phrase.norwegian == norwegian)
+    )
+    return result.scalar_one_or_none()
+
+
+async def create_phrase(db: AsyncSession, norwegian: str, translations: List[str], **kwargs) -> Optional[Phrase]:
+    """Create a new phrase. Returns None if duplicate exists."""
+    # Check for duplicate
+    existing = await find_phrase_by_norwegian(db, norwegian)
+    if existing:
+        return None  # Duplicate - skip
+    
+    phrase = Phrase(
+        norwegian=norwegian,
+        translations=translations,
+        category=kwargs.get('category'),
+        notes=kwargs.get('notes'),
+        tags=kwargs.get('tags'),
+        level=kwargs.get('level')
+    )
+    db.add(phrase)
+    await db.commit()
+    await db.refresh(phrase)
+    return phrase
+
+
+async def update_phrase(db: AsyncSession, phrase_id: int, **kwargs) -> Optional[Phrase]:
+    """Update a phrase. Returns None if not found."""
+    phrase = await get_phrase(db, phrase_id)
+    if not phrase:
+        return None
+    
+    # Update fields if provided
+    if 'norwegian' in kwargs:
+        phrase.norwegian = kwargs['norwegian']
+    if 'translations' in kwargs:
+        phrase.translations = kwargs['translations']
+    if 'category' in kwargs:
+        phrase.category = kwargs['category']
+    if 'notes' in kwargs:
+        phrase.notes = kwargs['notes']
+    if 'tags' in kwargs:
+        phrase.tags = kwargs['tags']
+    if 'level' in kwargs:
+        phrase.level = kwargs['level']
+    
+    await db.commit()
+    await db.refresh(phrase)
+    return phrase
+
+
+async def delete_phrase(db: AsyncSession, phrase_id: int) -> bool:
+    """Delete a phrase."""
+    phrase = await get_phrase(db, phrase_id)
+    if phrase:
+        await db.delete(phrase)
+        await db.commit()
+        return True
+    return False
+
+
+# ========== GRAMMAR LESSONS ==========
+
 async def get_grammar_lessons(db: AsyncSession, tag: Optional[str] = None) -> List[GrammarLesson]:
     """Get all grammar lessons."""
     query = select(GrammarLesson)

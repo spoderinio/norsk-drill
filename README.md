@@ -1,114 +1,227 @@
-# 🇳🇴 Norsk Drill - Norwegian Vocabulary Practice
+# 🚀 NORSK DRILL v2.0 - DEPLOYMENT PACKAGE
 
-Personal language learning app for practicing Norwegian nouns, verbs, and adjectives with grammatical groups.
+## 📦 Какво съдържа този пакет?
 
-## Features
+Това е **comprehensive update** на Norsk Drill приложението с **5 major функционалности**:
 
-- ✅ **Practice Nouns** with articles (en/ei/et)
-- ✅ **Practice Verbs** with all tenses (presens, preteritum, perfektum)
-- ✅ **Practice Adjectives** with forms (neuter, plural)
-- ✅ **Grammar Groups** - Learn the rules while practicing
-- ✅ **Bulgarian Translations** - See what the word means
-- ✅ **Smart Randomization** - Avoids recently seen words
-- ✅ **Progress Tracking** - See your score
-- ✅ **Dark/Light Theme** - Easy on the eyes
-- ✅ **CSV Import** - Easy data management
-- ✅ **Runs on Raspberry Pi** - Lightweight and efficient
+✅ **Validation Fix** - Празни полета = грешни отговори  
+✅ **Parentheses Ignore** - Игнорира текст в скоби  
+✅ **Duplicate Checking** - Пропуска дубликати при импорт  
+✅ **Edit Functionality** - Редактиране на всички думи  
+✅ **Phrases (NEW!)** - Нова категория за фрази и изрази  
 
-## Quick Start
+---
 
+## 📚 ДОКУМЕНТАЦИЯ (Прочети ПЪРВО!)
+
+### 🎯 Главен Guide:
+**START HERE:** `DEPLOYMENT_GUIDE.md`  
+- Пълна стъпка-по-стъпка инструкция
+- Troubleshooting
+- Testing
+
+### 📋 File Mapping:
+**FILE_MAPPING.md**  
+- Списък на всички файлове
+- Къде отива всеки файл
+- Batch copy команди
+- Checklist
+
+### 🔧 Admin Changes:
+**admin_py_changes.md**  
+- Детайлни промени в admin.py
+- Code snippets
+- Alternative methods
+
+---
+
+## 📁 ФАЙЛОВЕ В ПАКЕТА
+
+### Core Files (Direct Replace):
+```
+db.py                          → app/db.py
+crud.py                        → app/crud.py
+practice.py                    → app/routers/practice.py
+home.html                      → app/templates/home.html
+admin_index.html               → app/templates/admin/index.html
+```
+
+### New Templates:
+```
+phrases.html                   → app/templates/practice/phrases.html
+phrases_admin.html             → app/templates/admin/phrases.html
+edit_noun.html                 → app/templates/admin/edit_noun.html
+edit_verb.html                 → app/templates/admin/edit_verb.html
+edit_adjective.html            → app/templates/admin/edit_adjective.html
+edit_phrase.html               → app/templates/admin/edit_phrase.html
+```
+
+### Code Snippets (for manual updates):
+```
+admin_edit_routes.py           - Edit routes за admin.py
+admin_phrases_routes.py        - Phrases routes за admin.py
+COMPLETE_IMPORT_FUNCTIONS.py  - Обновени import функции
+```
+
+---
+
+## ⚡ QUICK START (Fast Deploy)
+
+### 1. Backup
 ```bash
-# Install dependencies
-cd norsk-drill
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-
-# Run the app
-python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
-
-# Access at http://localhost:8000
+cd ~/Documents
+cp -r norsk-drill norsk-drill-backup-$(date +%Y%m%d)
 ```
 
-## Import Data
-
-1. Go to `http://localhost:8000/admin/adjectives`
-2. Upload `static/adjectives_with_groups_BG.csv`
-3. Go to `http://localhost:8000/admin/verbs`
-4. Upload `static/verbs_with_groups_BG.csv`
-
-## Grammar Groups
-
-Based on "På vei til norsk grammatikk", words are organized into groups:
-
-### Adjectives
-- **Group 1**: Regular adjectives (+t neuter, +e plural)
-- **Group 2**: Unchanging adjectives
-- **Group 3**: No neuter ending, +e plural
-- **Group 4**: Ending in -å (+tt neuter only)
-
-### Verbs
-- **Group 1**: Short vowel + 2+ consonants (-et/-et)
-- **Group 2**: Long vowel + single consonant (-te/-t)
-- **Group 3**: Ending in v/g/gg or diphthong (-de/-d)
-- **Group 4**: Ending in stressed vowel (-dde/-dd)
-- **Irregular**: Common irregular verbs
-
-## Tech Stack
-
-- **Backend**: FastAPI + Python 3.11+
-- **Database**: SQLite + SQLAlchemy (async)
-- **Frontend**: Jinja2 templates + Vanilla JS
-- **Styling**: CSS (dark/light theme)
-- **Storage**: LocalStorage for preferences and progress
-
-## Project Structure
-
-```
-norsk-drill/
-├── app/
-│   ├── main.py              # FastAPI app
-│   ├── settings.py          # Config
-│   ├── db.py                # Database models
-│   ├── crud.py              # Database operations
-│   ├── routers/
-│   │   ├── practice.py      # Practice routes & API
-│   │   └── admin.py         # Admin panel
-│   └── templates/
-│       ├── base.html
-│       ├── home.html
-│       ├── practice/        # Practice pages
-│       └── admin/           # Admin pages
-├── static/
-│   ├── adjectives_with_groups_BG.csv
-│   └── verbs_with_groups_BG.csv
-├── data/
-│   └── norsk_drill.db       # Created automatically
-├── requirements.txt
-└── README.md
-```
-
-## Development
-
+### 2. Copy Files
 ```bash
-# Run with auto-reload
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+cd ~/Documents/norsk-drill
+
+# Core files
+cp db.py app/db.py
+cp crud.py app/crud.py
+cp practice.py app/routers/practice.py
+cp home.html app/templates/home.html
+cp admin_index.html app/templates/admin/index.html
+
+# Templates
+cp phrases.html app/templates/practice/
+cp phrases_admin.html app/templates/admin/phrases.html
+cp edit_*.html app/templates/admin/
 ```
 
-## Deployment (Raspberry Pi)
-
-See [GIT_SETUP.md](GIT_SETUP.md) for full Git workflow.
-
+### 3. Update admin.py
 ```bash
-# As systemd service
-sudo systemctl enable norsk-drill
-sudo systemctl start norsk-drill
+# Manual edit required!
+# See admin_py_changes.md for details
+nano app/routers/admin.py
 ```
 
-## License
+### 4. Add Edit Buttons
+```bash
+# Manual edit required!
+# Edit these files:
+# - app/templates/admin/nouns.html
+# - app/templates/admin/verbs.html
+# - app/templates/admin/adjectives.html
+```
 
-Personal use only.
+### 5. Deploy
+```bash
+git add .
+git commit -m "Major update v2.0"
+git push
 
-## Credits
+# On Pi:
+sudo systemctl stop norsk-drill && git pull && sudo systemctl start norsk-drill
+```
 
-Grammar rules based on "På vei til norsk grammatikk" textbook.
+---
+
+## 🎯 КАКВО Е НОВО?
+
+### 1. Validation Fix
+**Преди:** Празни полета → ✅ Correct  
+**След:** Празни полета → ❌ Incorrect  
+
+### 2. Parentheses Ignore
+**Преди:** "време" ≠ "време (навън)"  
+**След:** "време" = "време (навън)" ✅  
+
+### 3. Duplicate Checking
+**Преди:** CSV import 2x → 2x думи в база  
+**След:** CSV import 2x → 1x думи (skip duplicates)  
+
+### 4. Edit Functionality
+**Ново:** ✏️ Edit бутон до всяка дума в Admin  
+- Промяна на форми
+- Поправяне на преводи
+- Обновяване на групи
+
+### 5. Phrases (NEW!)
+**Ново:** 🗣️ Phrases категория  
+- Фрази и изрази
+- Category organization
+- Notes field
+- Practice като други категории
+
+---
+
+## 🗄️ DATABASE CHANGES
+
+**Нови колони:**
+- `verbs.group`
+- `verbs.group_description`
+- `adjectives.group`
+- `adjectives.group_description`
+
+**Нова таблица:**
+- `phrases` (norwegian, translations, category, notes)
+
+**Миграция:** Автоматична при първо стартиране!
+
+---
+
+## ✅ TESTING CHECKLIST
+
+След deploy, тествай:
+
+- [ ] Practice Verbs - празни полета = грешно
+- [ ] Translation с "(текст)" - работи без скобите
+- [ ] Import същ CSV 2x - само 1x в база
+- [ ] Edit бутон в Admin - работи
+- [ ] Phrases практика - показва се
+- [ ] Phrases admin - работи import/edit/delete
+
+---
+
+## 📞 SUPPORT FILES
+
+- `DEPLOYMENT_GUIDE.md` - Пълен deployment guide
+- `FILE_MAPPING.md` - File-by-file mapping
+- `admin_py_changes.md` - Admin.py промени
+- `COMPLETE_IMPORT_FUNCTIONS.py` - Import функции reference
+
+---
+
+## 🎉 РЕЗУЛТАТ
+
+След deploy ще имаш:
+
+✨ **По-строга валидация**  
+✨ **По-smart проверка на преводи**  
+✨ **Защита от дубликати**  
+✨ **Пълен контрол с Edit**  
+✨ **Нова Phrases категория**  
+
+---
+
+## 📈 VERSION INFO
+
+**Version:** 2.0  
+**Release Date:** 2025-12-17  
+**Files Changed:** 16  
+**New Features:** 5  
+**Breaking Changes:** None (backward compatible)  
+
+---
+
+## ⚠️ ВАЖНИ ЗАБЕЛЕЖКИ
+
+1. **Backup преди deploy!**
+2. **Database ще се обнови автоматично**
+3. **Съществуващи данни ще останат**
+4. **Ръчно редактиране на admin.py е задължително**
+5. **Тествай локално преди Pi deploy**
+
+---
+
+## 🚀 READY?
+
+**Следвай DEPLOYMENT_GUIDE.md за стъпка-по-стъпка инструкции!**
+
+**Успех с deploy-а!** 💪
+
+---
+
+**Made with ❤️ for Norwegian language learning** 🇳🇴
