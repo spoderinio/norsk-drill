@@ -35,20 +35,23 @@
                     name="translation"
                     autocomplete="off"
                     placeholder="Enter Bulgarian translation"
-                    required
                 >
             </div>
 
-            <button type="submit" class="btn" style="width: 100%;">
-                Check Answer
-            </button>
+            <div id="feedback" style="display: none; margin-bottom: 1.5rem;"></div>
+
+            <div id="button-container" style="display: flex; gap: 1rem;">
+                <button type="submit" class="btn" id="submit-btn" style="flex: 1;">
+                    Check Answer
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="skipPhrase()" id="skip-btn" style="flex: 1;">
+                    Skip ⏭️
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="loadNextPhrase()" id="next-btn" style="display: none; flex: 1;">
+                    Next Phrase
+                </button>
+            </div>
         </form>
-
-        <div id="feedback" style="display: none; margin-top: 1.5rem;"></div>
-
-        <button id="next-btn" class="btn btn-secondary" onclick="loadNextPhrase()" style="display: none; width: 100%; margin-top: 1rem;">
-            Next Phrase →
-        </button>
     </div>
 
     <div id="loading" style="text-align: center; padding: 3rem;">
@@ -63,11 +66,18 @@
             Start Over
         </button>
     </div>
+
+    <div id="stats" style="margin-top: 2rem; text-align: center; color: var(--text-secondary);">
+        <span id="correct-count">0</span> correct | 
+        <span id="total-count">0</span> total
+    </div>
 </div>
 
 <script>
 let currentPhrase = null;
 let excludedIds = [];
+let correctCount = 0;
+let totalCount = 0;
 
 async function loadNextPhrase() {
     document.getElementById('practice-card').style.display = 'none';
@@ -123,8 +133,9 @@ function displayPhrase() {
     
     document.getElementById('translation-input').value = '';
     document.getElementById('feedback').style.display = 'none';
+    document.getElementById('submit-btn').style.display = 'inline-block';
+    document.getElementById('skip-btn').style.display = 'inline-block';
     document.getElementById('next-btn').style.display = 'none';
-    document.getElementById('answer-form').style.display = 'block';
     
     document.getElementById('loading').style.display = 'none';
     document.getElementById('practice-card').style.display = 'block';
@@ -148,13 +159,47 @@ async function checkAnswer(event) {
         });
         
         const result = await response.json();
+        
+        totalCount++;
+        if (result.all_correct) {
+            correctCount++;
+        }
+        document.getElementById('correct-count').textContent = correctCount;
+        document.getElementById('total-count').textContent = totalCount;
+        
         displayFeedback(result);
         
         excludedIds.push(currentPhrase.id);
         
+        document.getElementById('submit-btn').style.display = 'none';
+        document.getElementById('skip-btn').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'inline-block';
+        
     } catch (error) {
         console.error('Error:', error);
     }
+}
+
+function skipPhrase() {
+    // Show feedback as if answer was wrong
+    const result = {
+        all_correct: false,
+        translation_correct: false,
+        correct_translations: currentPhrase.translations
+    };
+    
+    // Update stats (count as wrong)
+    totalCount++;
+    document.getElementById('correct-count').textContent = correctCount;
+    document.getElementById('total-count').textContent = totalCount;
+    
+    displayFeedback(result);
+    
+    excludedIds.push(currentPhrase.id);
+    
+    document.getElementById('submit-btn').style.display = 'none';
+    document.getElementById('skip-btn').style.display = 'none';
+    document.getElementById('next-btn').style.display = 'inline-block';
 }
 
 function displayFeedback(result) {
@@ -179,12 +224,14 @@ function displayFeedback(result) {
     }
     
     feedback.style.display = 'block';
-    document.getElementById('answer-form').style.display = 'none';
-    document.getElementById('next-btn').style.display = 'block';
 }
 
 function resetPractice() {
     excludedIds = [];
+    correctCount = 0;
+    totalCount = 0;
+    document.getElementById('correct-count').textContent = '0';
+    document.getElementById('total-count').textContent = '0';
     loadNextPhrase();
 }
 
