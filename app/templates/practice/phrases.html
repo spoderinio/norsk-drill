@@ -4,13 +4,30 @@
 <div class="practice-container">
     <h1>🗣️ Practice Phrases</h1>
     
+    <!-- Settings -->
+    <div class="card" style="margin-bottom: 2rem;">
+        <h3 style="margin-bottom: 1rem;">Settings</h3>
+        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+            <input type="checkbox" id="auto-play" onchange="updateSettings()">
+            <span>🔊 Auto-play pronunciation</span>
+        </label>
+    </div>
+    
     <div id="practice-card" class="card" style="display: none;">
         <div style="text-align: center; margin-bottom: 2rem;">
             <div style="font-size: 2rem; font-weight: 700; color: var(--accent); margin-bottom: 0.5rem;">
                 PHRASE
             </div>
-            <div id="norwegian-phrase" style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1rem;">
-                <!-- Norwegian phrase here -->
+            <div style="margin-bottom: 1rem;">
+                <span id="norwegian-phrase" style="font-size: 1.5rem; font-weight: 600;"></span>
+                <button 
+                    onclick="speakPhrase()" 
+                    id="speak-btn"
+                    style="background: none; border: none; font-size: 1.5rem; cursor: pointer; margin-left: 1rem; vertical-align: middle;"
+                    title="Listen to pronunciation"
+                >
+                    🔊
+                </button>
             </div>
             
             <!-- Category badge -->
@@ -79,6 +96,87 @@ let excludedIds = [];
 let correctCount = 0;
 let totalCount = 0;
 
+// TTS variables
+let norwegianVoice = null;
+let voicesLoaded = false;
+
+// Settings
+let settings = {
+    autoPlay: false
+};
+
+// Load TTS voices
+function loadVoices() {
+    return new Promise((resolve) => {
+        const voices = speechSynthesis.getVoices();
+        if (voices.length > 0) {
+            resolve(voices);
+        } else {
+            speechSynthesis.onvoiceschanged = () => {
+                resolve(speechSynthesis.getVoices());
+            };
+        }
+    });
+}
+
+// Initialize TTS
+async function initTTS() {
+    if (!('speechSynthesis' in window)) {
+        console.warn('Speech Synthesis not supported');
+        return;
+    }
+    
+    const voices = await loadVoices();
+    norwegianVoice = voices.find(v => 
+        v.lang === 'nb-NO' || 
+        v.lang === 'no-NO' ||
+        v.lang.startsWith('nb') ||
+        v.lang.startsWith('no')
+    );
+    
+    if (norwegianVoice) {
+        console.log('✅ Norwegian voice found:', norwegianVoice.name);
+    } else {
+        console.log('⚠️ No Norwegian voice, using default');
+    }
+    
+    voicesLoaded = true;
+}
+
+// Speak phrase
+function speakPhrase() {
+    if (!currentPhrase || !('speechSynthesis' in window)) return;
+    
+    speechSynthesis.cancel();
+    
+    const utterance = new SpeechSynthesisUtterance(currentPhrase.norwegian);
+    
+    if (norwegianVoice) {
+        utterance.voice = norwegianVoice;
+    } else {
+        utterance.lang = 'nb-NO';
+    }
+    
+    utterance.rate = 0.7;  // Even slower for phrases
+    utterance.pitch = 1.0;
+    
+    speechSynthesis.speak(utterance);
+}
+
+// Load settings
+function loadSettings() {
+    const saved = localStorage.getItem('phraseSettings');
+    if (saved) {
+        settings = JSON.parse(saved);
+        document.getElementById('auto-play').checked = settings.autoPlay || false;
+    }
+}
+
+function updateSettings() {
+    settings.autoPlay = document.getElementById('auto-play').checked;
+    localStorage.setItem('phraseSettings', JSON.stringify(settings));
+}
+
 async function loadNextPhrase() {
     document.getElementById('practice-card').style.display = 'none';
     document.getElementById('loading').style.display = 'block';
@@ -140,6 +238,11 @@ function displayPhrase() {
     document.getElementById('loading').style.display = 'none';
     document.getElementById('practice-card').style.display = 'block';
     
+    // Auto-play if enabled
+    if (settings.autoPlay && voicesLoaded) {
+        setTimeout(() => speakPhrase(), 300);
+    }
+    
     document.getElementById('translation-input').focus();
 }
 
@@ -181,14 +284,12 @@ async function checkAnswer(event) {
 }
 
 function skipPhrase() {
-    // Show feedback as if answer was wrong
     const result = {
         all_correct: false,
         translation_correct: false,
         correct_translations: currentPhrase.translations
     };
     
-    // Update stats (count as wrong)
     totalCount++;
     document.getElementById('correct-count').textContent = correctCount;
     document.getElementById('total-count').textContent = totalCount;
@@ -235,7 +336,9 @@ function resetPractice() {
     loadNextPhrase();
 }
 
-// Load first phrase on page load
+// Initialize
+loadSettings();
+initTTS();
 loadNextPhrase();
 </script>
 {% endblock %}
