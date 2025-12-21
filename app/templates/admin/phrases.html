@@ -4,16 +4,42 @@
 <div>
     <h2>🗣️ Manage Phrases</h2>
     
-    <!-- Import CSV Section -->
+    <!-- Import Section -->
     <div class="card" style="margin: 2rem 0;">
-        <h3>Import Phrases from CSV</h3>
-        <form action="/admin/phrases/import-csv" method="POST" enctype="multipart/form-data">
-            <input type="file" name="file" accept=".csv" required>
-            <button type="submit" class="btn" style="margin-top: 1rem;">Upload CSV</button>
-        </form>
-        <small style="display: block; margin-top: 0.5rem; color: var(--text-secondary);">
-            CSV format: norwegian,translations,category,notes
-        </small>
+        <h3>Import Phrases</h3>
+        
+        <!-- TEXT IMPORT -->
+        <div style="margin-bottom: 2rem;">
+            <h4 style="margin-bottom: 0.5rem;">Import from Text</h4>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9rem;">
+                Format: <code>norwegian phrase – bulgarian translation</code>
+            </p>
+            <form action="/admin/phrases/import-text" method="POST">
+                <textarea 
+                    name="text_data" 
+                    rows="10" 
+                    placeholder="Paste your text here (one phrase per line)
+Example:
+om våren – през пролетта
+til høsten – следващата есен
+Hvordan er været? – Какво е времето?"
+                    style="margin-bottom: 1rem;"
+                ></textarea>
+                <button type="submit" class="btn">Import Text</button>
+            </form>
+        </div>
+        
+        <!-- CSV IMPORT -->
+        <div>
+            <h4 style="margin-bottom: 0.5rem;">Import from CSV</h4>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9rem;">
+                CSV format: <code>norwegian,translations,category,notes</code>
+            </p>
+            <form action="/admin/phrases/import-csv" method="POST" enctype="multipart/form-data">
+                <input type="file" name="file" accept=".csv" style="margin-bottom: 1rem;">
+                <button type="submit" class="btn">Import CSV</button>
+            </form>
+        </div>
     </div>
 
     <!-- Phrases List -->
@@ -50,7 +76,6 @@
                         <a href="/admin/phrases/{{ phrase.id }}/edit" style="background: var(--accent); color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 0.25rem; text-decoration: none; display: inline-block; margin-right: 0.5rem;">
                             ✏️ Edit
                         </a>
-                        
                         <form action="/admin/phrases/{{ phrase.id }}/delete" method="POST" style="display: inline;" onsubmit="return confirm('Delete this phrase?');">
                             <button type="submit" style="background: var(--error); color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 0.25rem; cursor: pointer;">
                                 🗑️ Delete
@@ -62,7 +87,9 @@
             </tbody>
         </table>
         {% else %}
-        <p style="margin-top: 1rem; color: var(--text-secondary);">No phrases yet. Import a CSV file to get started!</p>
+        <p style="color: var(--text-secondary); text-align: center; padding: 2rem;">
+            No phrases yet. Import some to get started!
+        </p>
         {% endif %}
     </div>
 </div>

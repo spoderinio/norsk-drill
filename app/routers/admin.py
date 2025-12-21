@@ -45,6 +45,50 @@ async def admin_nouns(request: FastAPIRequest, db: AsyncSession = Depends(get_db
     })
 
 
+@router.post("/nouns/import-text")
+async def import_nouns_text(
+    text_data: str = Form(...),
+    db: AsyncSession = Depends(get_db)
+):
+    """Import nouns from text format (en/ei/et word – translation1, translation2)."""
+    lines = text_data.strip().split('\n')
+    added = 0
+    skipped = 0
+    
+    for line in lines:
+        line = line.strip()
+        if not line or '–' not in line:
+            continue
+        
+        # Split on en-dash or regular dash
+        parts = line.split('–') if '–' in line else line.split('-', 1)
+        if len(parts) != 2:
+            continue
+        
+        left = parts[0].strip()
+        right = parts[1].strip()
+        
+        # Parse article and word
+        left_parts = left.split(None, 1)
+        if len(left_parts) != 2:
+            continue
+        
+        article, word = left_parts
+        if article not in ['en', 'ei', 'et']:
+            continue
+        
+        # Parse translations
+        translations = [t.strip() for t in right.split(',')]
+        
+        result = await crud.create_noun(db, article, word, translations)
+        if result:
+            added += 1
+        else:
+            skipped += 1
+    
+    return RedirectResponse(url="/admin/nouns", status_code=303)
+
+
 @router.post("/nouns/import-csv")
 async def import_nouns_csv(
     file: UploadFile = File(...),
@@ -382,6 +426,54 @@ async def admin_phrases(request: FastAPIRequest, db: AsyncSession = Depends(get_
         "title": "Manage Phrases",
         "phrases": phrases
     })
+
+
+@router.post("/phrases/import-text")
+async def import_phrases_text(
+    text_data: str = Form(...),
+    db: AsyncSession = Depends(get_db)
+):
+    """Import phrases from text format (norwegian phrase – bulgarian translation)."""
+    lines = text_data.strip().split('\n')
+    added = 0
+    skipped = 0
+    
+    for line in lines:
+        line = line.strip()
+        if not line or '–' not in line:
+            continue
+        
+        # Split on en-dash or regular dash
+        parts = line.split('–') if '–' in line else line.split('-', 1)
+        if len(parts) != 2:
+            continue
+        
+        norwegian = parts[0].strip()
+        right = parts[1].strip()
+        
+        if not norwegian:
+            continue
+        
+        # Parse translations (comma-separated)
+        translations = [t.strip() for t in right.split(',') if t.strip()]
+        
+        if not translations:
+            continue
+        
+        result = await crud.create_phrase(
+            db,
+            norwegian=norwegian,
+            translations=translations,
+            category=None,  # Can be added later via Edit
+            notes=None
+        )
+        
+        if result:
+            added += 1
+        else:
+            skipped += 1
+    
+    return RedirectResponse(url="/admin/phrases", status_code=303)
 
 
 @router.post("/phrases/import-csv")
