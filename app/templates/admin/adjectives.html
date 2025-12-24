@@ -31,6 +31,7 @@
                     <th style="padding: 0.75rem; text-align: left;">Base</th>
                     <th style="padding: 0.75rem; text-align: left;">Neuter</th>
                     <th style="padding: 0.75rem; text-align: left;">Plural</th>
+                    <th style="padding: 0.75rem; text-align: left;">Group</th>
                     <th style="padding: 0.75rem; text-align: left;">Translations</th>
                     <th style="padding: 0.75rem; text-align: right;">Actions</th>
                 </tr>
@@ -41,6 +42,15 @@
                     <td style="padding: 0.75rem; font-weight: 600;">{{ adj.base }}</td>
                     <td style="padding: 0.75rem;">{{ adj.neuter or '-' }}</td>
                     <td style="padding: 0.75rem;">{{ adj.plural or '-' }}</td>
+                    <td style="padding: 0.75rem;">
+                        {% if adj.group %}
+                        <span style="background: var(--card-bg); padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.875rem;">
+                            {{ adj.group }}
+                        </span>
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
                     <td style="padding: 0.75rem;">{{ adj.translations|join(', ') if adj.translations else '' }}</td>
                     <td style="padding: 0.75rem; text-align: right;">
                         <a href="/admin/adjectives/{{ adj.id }}/edit" style="background: var(--accent); color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 0.25rem; text-decoration: none; display: inline-block; margin-right: 0.5rem;">

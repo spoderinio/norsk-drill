@@ -32,6 +32,7 @@
                     <th style="padding: 0.75rem; text-align: left;">Presens</th>
                     <th style="padding: 0.75rem; text-align: left;">Preteritum</th>
                     <th style="padding: 0.75rem; text-align: left;">Perfect</th>
+                    <th style="padding: 0.75rem; text-align: left;">Group</th>
                     <th style="padding: 0.75rem; text-align: left;">Translations</th>
                     <th style="padding: 0.75rem; text-align: right;">Actions</th>
                 </tr>
@@ -43,6 +44,15 @@
                     <td style="padding: 0.75rem;">{{ verb.presens or '-' }}</td>
                     <td style="padding: 0.75rem;">{{ verb.preteritum or '-' }}</td>
                     <td style="padding: 0.75rem;">{{ verb.perfect_participle or '-' }}</td>
+                    <td style="padding: 0.75rem;">
+                        {% if verb.group %}
+                        <span style="background: var(--card-bg); padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.875rem;">
+                            {{ verb.group }}
+                        </span>
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
                     <td style="padding: 0.75rem;">{{ verb.translations|join(', ') if verb.translations else '' }}</td>
                     <td style="padding: 0.75rem; text-align: right;">
                         <a href="/admin/verbs/{{ verb.id }}/edit" style="background: var(--accent); color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 0.25rem; text-decoration: none; display: inline-block; margin-right: 0.5rem;">

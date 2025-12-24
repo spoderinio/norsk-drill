@@ -7,6 +7,28 @@
 <div class="card" style="margin-bottom: 2rem;">
     <h3 style="margin-bottom: 1rem;">Import Nouns</h3>
     
+    <!-- TEXT IMPORT -->
+    <div style="margin-bottom: 2rem;">
+        <h4 style="margin-bottom: 0.5rem;">Import from Text</h4>
+        <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9rem;">
+            Format: <code>et intervju – интервю</code> or <code>en sjanse – шанс, възможност</code>
+        </p>
+        <form action="/admin/nouns/import-text" method="POST">
+            <textarea 
+                name="text_data" 
+                rows="10" 
+                placeholder="Paste your text here (one word per line)
+Example:
+et intervju – интервю
+en sjanse – шанс, възможност
+ei løsning – решение"
+                style="margin-bottom: 1rem;"
+            ></textarea>
+            <button type="submit" class="btn">Import Text</button>
+        </form>
+    </div>
+
+    <!-- CSV IMPORT -->
     <div>
         <h4 style="margin-bottom: 0.5rem;">Import from CSV</h4>
         <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9rem;">

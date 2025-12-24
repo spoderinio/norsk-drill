@@ -24,6 +24,14 @@
             >
                 🔊
             </button>
+            
+            <!-- Group info -->
+            <div id="group-info" style="margin-top: 1rem; display: none;">
+                <div style="display: inline-block; background: var(--card-bg); padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.875rem;">
+                    💡 <span id="group-text" style="font-weight: 600;"></span>
+                    <div id="group-desc" style="margin-top: 0.25rem; color: var(--text-secondary); font-size: 0.8rem;"></div>
+                </div>
+            </div>
         </div>
 
         <form id="answer-form" onsubmit="checkAnswer(event);">
@@ -183,6 +191,24 @@ async function loadNextWord() {
         seenIds.push(currentVerb.id);
         
         document.getElementById('word-display').textContent = currentVerb.infinitive;
+        
+        // Display group info if available
+        const groupInfo = document.getElementById('group-info');
+        const groupText = document.getElementById('group-text');
+        const groupDesc = document.getElementById('group-desc');
+        
+        if (currentVerb.group) {
+            groupText.textContent = currentVerb.group;
+            if (currentVerb.group_description) {
+                groupDesc.textContent = currentVerb.group_description;
+                groupDesc.style.display = 'block';
+            } else {
+                groupDesc.style.display = 'none';
+            }
+            groupInfo.style.display = 'block';
+        } else {
+            groupInfo.style.display = 'none';
+        }
         
         // Auto-play if enabled
         if (settings.autoPlay && voicesLoaded) {
