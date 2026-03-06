@@ -1,344 +1,164 @@
-{% extends "base.html" %}
-
-{% block content %}
-<div class="practice-container">
-    <h1>🗣️ Practice Phrases</h1>
-    
-    <!-- Settings -->
-    <div class="card" style="margin-bottom: 2rem;">
-        <h3 style="margin-bottom: 1rem;">Settings</h3>
-        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-            <input type="checkbox" id="auto-play" onchange="updateSettings()">
-            <span>🔊 Auto-play pronunciation</span>
-        </label>
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Fraser – Norsk Drill</title>
+<style>
+:root{--bg:#0f1117;--card:#1a1d27;--border:#2a2d3e;--accent:#4f8ef7;--green:#2ecc71;--red:#e74c3c;--text:#e0e0e0;--muted:#666;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;min-height:100vh;}
+.nav{background:var(--card);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;}
+.nav-title{font-weight:700;color:var(--accent);}
+.nav-links a{color:var(--muted);text-decoration:none;margin-left:14px;font-size:.9em;}
+.container{max-width:600px;margin:0 auto;padding:20px 16px;}
+.level-bar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 14px;}
+.level-bar span{font-size:.78em;color:var(--muted);align-self:center;margin-right:4px;}
+.lvl-btn{padding:5px 12px;border-radius:14px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-size:.82em;transition:all .2s;}
+.lvl-btn:hover{border-color:var(--accent);color:var(--accent);}
+.lvl-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;}
+.stats-row{display:flex;justify-content:center;gap:28px;margin-bottom:14px;}
+.stat{text-align:center;} .stat-val{font-size:1.3em;font-weight:700;}
+.stat-val.green{color:var(--green);} .stat-val.red{color:var(--red);}
+.stat-label{font-size:.72em;color:var(--muted);}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;text-align:center;}
+.card-label{font-size:.72em;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;}
+.word-display{font-size:1.8em;font-weight:700;color:#f0d080;margin-bottom:6px;line-height:1.3;}
+.tts-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1em;margin-bottom:14px;}
+.level-pill{font-size:.72em;background:#1a2a4a;color:var(--accent);padding:2px 10px;border-radius:10px;display:inline-block;margin-bottom:12px;}
+.input-row{display:flex;gap:8px;margin-bottom:10px;}
+.input-row input{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:11px 14px;color:var(--text);font-size:1em;}
+.input-row input:focus{outline:none;border-color:var(--accent);}
+.btn{padding:10px 18px;border-radius:8px;border:none;cursor:pointer;font-size:.9em;font-weight:600;}
+.btn-check{background:var(--accent);color:#fff;}
+.btn-skip{background:var(--border);color:var(--muted);margin-top:4px;width:100%;}
+.btn-next{background:var(--accent);color:#fff;width:100%;margin-top:10px;}
+.result-global{border-radius:9px;padding:12px 14px;margin-bottom:10px;text-align:left;}
+.result-correct{background:#1a3a1a;border:1px solid var(--green);color:var(--green);}
+.result-wrong{background:#3a1a1a;border:1px solid var(--red);color:var(--red);}
+.done-screen{text-align:center;padding:40px 20px;}
+.done-screen h2{font-size:1.8em;margin-bottom:10px;}
+.done-screen p{color:var(--muted);margin-bottom:20px;}
+.hidden{display:none;}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <span class="nav-title">🗣️ Fraser</span>
+  <div class="nav-links"><a href="/">🏠 Hjem</a><a href="/admin/phrases">⚙️ Admin</a></div>
+</nav>
+<div class="container">
+  <div class="level-bar">
+    <span>Nivå:</span>
+    <button class="lvl-btn {% if selected_level=='all' %}active{% endif %}" data-level="all" onclick="changeLevel('all',this)">Alle</button>
+    {% for lvl in levels %}
+    <button class="lvl-btn {% if selected_level==lvl %}active{% endif %}" data-level="{{ lvl }}" onclick="changeLevel('{{ lvl }}',this)">{{ lvl }}</button>
+    {% endfor %}
+  </div>
+  <div class="stats-row">
+    <div class="stat"><div class="stat-val green" id="stat-correct">0</div><div class="stat-label">✅ Riktig</div></div>
+    <div class="stat"><div class="stat-val red" id="stat-wrong">0</div><div class="stat-label">❌ Feil</div></div>
+  </div>
+  <div class="card" id="practice-card">
+    <div class="card-label">🗣️ Hva betyr denne frasen?</div>
+    <div class="word-display" id="word-display">—</div>
+    <button class="tts-btn" onclick="speak()">🔊</button>
+    <div class="level-pill hidden" id="level-pill"></div>
+    <div class="input-row">
+      <input type="text" id="answer-input" placeholder="Oversettelse..." autocomplete="off" autocorrect="off"/>
+      <button class="btn btn-check" onclick="checkAnswer()">✓</button>
     </div>
-    
-    <div id="practice-card" class="card" style="display: none;">
-        <div style="text-align: center; margin-bottom: 2rem;">
-            <div style="font-size: 2rem; font-weight: 700; color: var(--accent); margin-bottom: 0.5rem;">
-                PHRASE
-            </div>
-            <div style="margin-bottom: 1rem;">
-                <span id="norwegian-phrase" style="font-size: 1.5rem; font-weight: 600;"></span>
-                <button 
-                    onclick="speakPhrase()" 
-                    id="speak-btn"
-                    style="background: none; border: none; font-size: 1.5rem; cursor: pointer; margin-left: 1rem; vertical-align: middle;"
-                    title="Listen to pronunciation"
-                >
-                    🔊
-                </button>
-            </div>
-            
-            <!-- Category badge -->
-            <div id="category-badge" style="display: inline-block; padding: 0.25rem 0.75rem; background: var(--card-bg); border-radius: 1rem; font-size: 0.875rem; margin-bottom: 1rem;">
-                <!-- Category here -->
-            </div>
-
-            <!-- Notes (if any) -->
-            <div id="notes-section" style="display: none; margin-top: 1rem; padding: 1rem; background: var(--card-bg); border-radius: 0.5rem; font-size: 0.875rem; color: var(--text-secondary);">
-                💡 <span id="phrase-notes"></span>
-            </div>
-        </div>
-
-        <form id="answer-form" onsubmit="checkAnswer(event)">
-            <div style="margin-bottom: 1.5rem;">
-                <label for="translation-input" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
-                    Translation
-                </label>
-                <input 
-                    type="text" 
-                    id="translation-input" 
-                    name="translation"
-                    autocomplete="off"
-                    placeholder="Enter Bulgarian translation"
-                >
-            </div>
-
-            <div id="feedback" style="display: none; margin-bottom: 1.5rem;"></div>
-
-            <div id="button-container" style="display: flex; gap: 1rem;">
-                <button type="submit" class="btn" id="submit-btn" style="flex: 1;">
-                    Check Answer
-                </button>
-                <button type="button" class="btn btn-secondary" onclick="skipPhrase()" id="skip-btn" style="flex: 1;">
-                    Skip ⏭️
-                </button>
-                <button type="button" class="btn btn-secondary" onclick="loadNextPhrase()" id="next-btn" style="display: none; flex: 1;">
-                    Next Phrase
-                </button>
-            </div>
-        </form>
+    <button class="btn btn-skip" onclick="skipWord()">⏭ Hopp over</button>
+    <div id="result-box" class="hidden">
+      <div id="result-content"></div>
+      <button class="btn btn-next" onclick="loadNext()">Neste →</button>
     </div>
-
-    <div id="loading" style="text-align: center; padding: 3rem;">
-        Loading...
-    </div>
-
-    <div id="no-more" style="display: none; text-align: center; padding: 3rem;">
-        <div style="font-size: 3rem; margin-bottom: 1rem;">🎉</div>
-        <h2>No more phrases!</h2>
-        <p style="margin-top: 1rem;">You've practiced all available phrases.</p>
-        <button class="btn" onclick="resetPractice()" style="margin-top: 1.5rem;">
-            Start Over
-        </button>
-    </div>
-
-    <div id="stats" style="margin-top: 2rem; text-align: center; color: var(--text-secondary);">
-        <span id="correct-count">0</span> correct | 
-        <span id="total-count">0</span> total
-    </div>
+  </div>
+  <div class="done-screen hidden" id="done-screen">
+    <h2>🎉 Ferdig!</h2>
+    <p id="done-stats"></p>
+    <button class="btn btn-check" style="display:block;margin:0 auto;" onclick="resetSession()">🔄 Start på nytt</button>
+    <a href="/" style="display:block;text-align:center;margin-top:12px;color:var(--muted);">← Tilbake</a>
+  </div>
 </div>
-
 <script>
-let currentPhrase = null;
-let excludedIds = [];
-let correctCount = 0;
-let totalCount = 0;
+let seenIds=[], currentItem=null, correct=0, wrong=0;
+let currentLevel='{{ selected_level }}';
 
-// TTS variables
-let norwegianVoice = null;
-let voicesLoaded = false;
-
-// Settings
-let settings = {
-    autoPlay: false
-};
-
-// Load TTS voices
-function loadVoices() {
-    return new Promise((resolve) => {
-        const voices = speechSynthesis.getVoices();
-        if (voices.length > 0) {
-            resolve(voices);
-        } else {
-            speechSynthesis.onvoiceschanged = () => {
-                resolve(speechSynthesis.getVoices());
-            };
-        }
-    });
+function changeLevel(level,btn){
+  currentLevel=level; localStorage.setItem('drill_level',level);
+  document.querySelectorAll('.lvl-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); resetSession();
 }
 
-// Initialize TTS
-async function initTTS() {
-    if (!('speechSynthesis' in window)) {
-        console.warn('Speech Synthesis not supported');
-        return;
-    }
-    
-    const voices = await loadVoices();
-    norwegianVoice = voices.find(v => 
-        v.lang === 'nb-NO' || 
-        v.lang === 'no-NO' ||
-        v.lang.startsWith('nb') ||
-        v.lang.startsWith('no')
-    );
-    
-    if (norwegianVoice) {
-        console.log('✅ Norwegian voice found:', norwegianVoice.name);
-    } else {
-        console.log('⚠️ No Norwegian voice, using default');
-    }
-    
-    voicesLoaded = true;
+async function loadNext(){
+  document.getElementById('result-box').classList.add('hidden');
+  document.getElementById('answer-input').value='';
+  document.getElementById('answer-input').disabled=false;
+  const resp=await fetch('/practice/phrases/next',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({seen_ids:seenIds,level:currentLevel})});
+  const data=await resp.json();
+  if(data.done){showDone();return;}
+  currentItem=data; seenIds.push(data.id);
+  document.getElementById('word-display').textContent=data.norwegian;
+  document.getElementById('level-pill').textContent='Nivå '+data.level;
+  document.getElementById('level-pill').classList.remove('hidden');
+  document.getElementById('answer-input').focus();
 }
 
-// Speak phrase
-function speakPhrase() {
-    if (!currentPhrase || !('speechSynthesis' in window)) return;
-    
-    speechSynthesis.cancel();
-    
-    const utterance = new SpeechSynthesisUtterance(currentPhrase.norwegian);
-    
-    if (norwegianVoice) {
-        utterance.voice = norwegianVoice;
-    } else {
-        utterance.lang = 'nb-NO';
-    }
-    
-    utterance.rate = 0.7;  // Even slower for phrases
-    utterance.pitch = 1.0;
-    
-    speechSynthesis.speak(utterance);
+async function checkAnswer(){
+  if(!currentItem)return;
+  const answer=document.getElementById('answer-input').value.trim();
+  const resp=await fetch('/practice/phrases/check',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:currentItem.id,answer})});
+  const data=await resp.json();
+  const trans=(data.translations||[]).join(', ');
+  if(data.correct)correct++;else wrong++;
+  document.getElementById('stat-correct').textContent=correct;
+  document.getElementById('stat-wrong').textContent=wrong;
+  document.getElementById('result-box').classList.remove('hidden');
+  document.getElementById('result-content').innerHTML=data.correct
+    ?`<div class="result-global result-correct"><div style="font-size:.75em;text-transform:uppercase">✅ Riktig!</div>${trans}</div>`
+    :`<div class="result-global result-wrong"><div style="font-size:.75em;text-transform:uppercase">❌ Riktig svar:</div><b>${trans}</b></div>`;
+  document.getElementById('answer-input').disabled=true;
 }
 
-// Load settings
-function loadSettings() {
-    const saved = localStorage.getItem('phraseSettings');
-    if (saved) {
-        settings = JSON.parse(saved);
-        document.getElementById('auto-play').checked = settings.autoPlay || false;
-    }
+function skipWord(){
+  if(!currentItem)return;
+  wrong++; document.getElementById('stat-wrong').textContent=wrong;
+  const trans=(currentItem.translations||[]).join(', ');
+  document.getElementById('result-box').classList.remove('hidden');
+  document.getElementById('result-content').innerHTML=`<div class="result-global result-wrong"><div style="font-size:.75em;text-transform:uppercase">⏭ Svar:</div><b>${trans}</b></div>`;
+  document.getElementById('answer-input').disabled=true;
 }
 
-function updateSettings() {
-    settings.autoPlay = document.getElementById('auto-play').checked;
-    localStorage.setItem('phraseSettings', JSON.stringify(settings));
+function showDone(){
+  document.getElementById('practice-card').classList.add('hidden');
+  document.getElementById('done-screen').classList.remove('hidden');
+  const total=correct+wrong, pct=total>0?Math.round(correct/total*100):0;
+  document.getElementById('done-stats').textContent=`${correct} riktige av ${total} forsøk (${pct}%)`;
 }
 
-async function loadNextPhrase() {
-    document.getElementById('practice-card').style.display = 'none';
-    document.getElementById('loading').style.display = 'block';
-    document.getElementById('no-more').style.display = 'none';
-    
-    try {
-        const params = new URLSearchParams();
-        if (excludedIds.length > 0) {
-            params.append('exclude_ids', excludedIds.join(','));
-        }
-        {% if category %}
-        params.append('category', '{{ category }}');
-        {% endif %}
-        
-        const response = await fetch(`/api/phrases/random?${params}`);
-        
-        if (!response.ok) {
-            if (response.status === 404) {
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('no-more').style.display = 'block';
-                return;
-            }
-            throw new Error('Failed to load phrase');
-        }
-        
-        currentPhrase = await response.json();
-        displayPhrase();
-    } catch (error) {
-        console.error('Error:', error);
-        document.getElementById('loading').innerHTML = '<p style="color: var(--error);">Error loading phrase</p>';
-    }
+function resetSession(){
+  seenIds=[];currentItem=null;correct=0;wrong=0;
+  document.getElementById('stat-correct').textContent=0;
+  document.getElementById('stat-wrong').textContent=0;
+  document.getElementById('done-screen').classList.add('hidden');
+  document.getElementById('practice-card').classList.remove('hidden');
+  loadNext();
 }
 
-function displayPhrase() {
-    document.getElementById('norwegian-phrase').textContent = currentPhrase.norwegian;
-    
-    // Show category badge
-    if (currentPhrase.category) {
-        document.getElementById('category-badge').textContent = currentPhrase.category;
-        document.getElementById('category-badge').style.display = 'inline-block';
-    } else {
-        document.getElementById('category-badge').style.display = 'none';
-    }
-    
-    // Show notes if available
-    if (currentPhrase.notes) {
-        document.getElementById('phrase-notes').textContent = currentPhrase.notes;
-        document.getElementById('notes-section').style.display = 'block';
-    } else {
-        document.getElementById('notes-section').style.display = 'none';
-    }
-    
-    document.getElementById('translation-input').value = '';
-    document.getElementById('feedback').style.display = 'none';
-    document.getElementById('submit-btn').style.display = 'inline-block';
-    document.getElementById('skip-btn').style.display = 'inline-block';
-    document.getElementById('next-btn').style.display = 'none';
-    
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('practice-card').style.display = 'block';
-    
-    // Auto-play if enabled
-    if (settings.autoPlay && voicesLoaded) {
-        setTimeout(() => speakPhrase(), 300);
-    }
-    
-    document.getElementById('translation-input').focus();
+function speak(){
+  if(!currentItem||!window.speechSynthesis)return;
+  const u=new SpeechSynthesisUtterance(currentItem.norwegian);
+  u.lang='nb-NO'; window.speechSynthesis.speak(u);
 }
 
-async function checkAnswer(event) {
-    event.preventDefault();
-    
-    const formData = new FormData(event.target);
-    const answer = {
-        translation: formData.get('translation')
-    };
-    
-    try {
-        const response = await fetch(`/api/phrases/${currentPhrase.id}/check`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(answer)
-        });
-        
-        const result = await response.json();
-        
-        totalCount++;
-        if (result.all_correct) {
-            correctCount++;
-        }
-        document.getElementById('correct-count').textContent = correctCount;
-        document.getElementById('total-count').textContent = totalCount;
-        
-        displayFeedback(result);
-        
-        excludedIds.push(currentPhrase.id);
-        
-        document.getElementById('submit-btn').style.display = 'none';
-        document.getElementById('skip-btn').style.display = 'none';
-        document.getElementById('next-btn').style.display = 'inline-block';
-        
-    } catch (error) {
-        console.error('Error:', error);
-    }
-}
-
-function skipPhrase() {
-    const result = {
-        all_correct: false,
-        translation_correct: false,
-        correct_translations: currentPhrase.translations
-    };
-    
-    totalCount++;
-    document.getElementById('correct-count').textContent = correctCount;
-    document.getElementById('total-count').textContent = totalCount;
-    
-    displayFeedback(result);
-    
-    excludedIds.push(currentPhrase.id);
-    
-    document.getElementById('submit-btn').style.display = 'none';
-    document.getElementById('skip-btn').style.display = 'none';
-    document.getElementById('next-btn').style.display = 'inline-block';
-}
-
-function displayFeedback(result) {
-    const feedback = document.getElementById('feedback');
-    feedback.innerHTML = '';
-    
-    if (result.all_correct) {
-        feedback.innerHTML = `
-            <div style="padding: 1rem; background: var(--success-bg); border-left: 4px solid var(--success); border-radius: 0.5rem;">
-                <div style="font-weight: 600; color: var(--success); margin-bottom: 0.5rem;">✅ Correct!</div>
-            </div>
-        `;
-    } else {
-        feedback.innerHTML = `
-            <div style="padding: 1rem; background: var(--error-bg); border-left: 4px solid var(--error); border-radius: 0.5rem;">
-                <div style="font-weight: 600; color: var(--error); margin-bottom: 0.5rem;">❌ Incorrect</div>
-                <div style="color: var(--text-secondary); font-size: 0.875rem;">
-                    <strong>Correct:</strong> ${result.correct_translations.join(', ')}
-                </div>
-            </div>
-        `;
-    }
-    
-    feedback.style.display = 'block';
-}
-
-function resetPractice() {
-    excludedIds = [];
-    correctCount = 0;
-    totalCount = 0;
-    document.getElementById('correct-count').textContent = '0';
-    document.getElementById('total-count').textContent = '0';
-    loadNextPhrase();
-}
-
-// Initialize
-loadSettings();
-initTTS();
-loadNextPhrase();
+document.getElementById('answer-input').addEventListener('keydown',e=>{
+  if(e.key==='Enter'){
+    if(!document.getElementById('result-box').classList.contains('hidden'))loadNext();
+    else checkAnswer();
+  }
+});
+loadNext();
 </script>
-{% endblock %}
+</body>
+</html>

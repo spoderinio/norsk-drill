@@ -1,78 +1,57 @@
-{% extends "base.html" %}
-
-{% block content %}
-<div style="max-width: 600px; margin: 0 auto;">
-    <h2>✏️ Edit Phrase</h2>
-    
-    <div class="card" style="margin-top: 2rem;">
-        <form method="POST" action="/admin/phrases/{{ phrase.id }}/edit">
-            <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
-                    Norwegian Phrase *
-                </label>
-                <input 
-                    type="text" 
-                    name="norwegian" 
-                    value="{{ phrase.norwegian }}"
-                    required
-                    placeholder="om våren"
-                >
-            </div>
-
-            <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
-                    Translations * (separated by |)
-                </label>
-                <input 
-                    type="text" 
-                    name="translations" 
-                    value="{{ '|'.join(phrase.translations) if phrase.translations else '' }}"
-                    required
-                    placeholder="през пролетта"
-                >
-                <small style="color: var(--text-secondary); display: block; margin-top: 0.25rem;">
-                    Use | to separate multiple translations
-                </small>
-            </div>
-
-            <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
-                    Category
-                </label>
-                <input 
-                    type="text" 
-                    name="category" 
-                    value="{{ phrase.category or '' }}"
-                    placeholder="time, weather, greetings..."
-                >
-                <small style="color: var(--text-secondary); display: block; margin-top: 0.25rem;">
-                    Optional: time, weather, greetings, food, etc.
-                </small>
-            </div>
-
-            <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
-                    Notes
-                </label>
-                <textarea 
-                    name="notes" 
-                    rows="3"
-                    placeholder="Additional context or explanation..."
-                >{{ phrase.notes or '' }}</textarea>
-                <small style="color: var(--text-secondary); display: block; margin-top: 0.25rem;">
-                    Optional: Add context or usage notes
-                </small>
-            </div>
-
-            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                <button type="submit" class="btn">
-                    💾 Save Changes
-                </button>
-                <a href="/admin/phrases" class="btn btn-secondary" style="text-decoration: none;">
-                    ❌ Cancel
-                </a>
-            </div>
-        </form>
-    </div>
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Rediger frase</title>
+<style>
+:root{--bg:#0f1117;--card:#1a1d27;--border:#2a2d3e;--accent:#4f8ef7;--text:#e0e0e0;--muted:#666;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;}
+.nav{background:var(--card);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;}
+.nav-title{font-weight:700;color:var(--accent);}
+.nav-links a{color:var(--muted);text-decoration:none;margin-left:14px;font-size:.9em;}
+.container{max-width:600px;margin:0 auto;padding:30px 20px;}
+h2{margin-bottom:24px;font-size:1.1em;}
+.section{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;}
+.field{margin-bottom:14px;}
+label{display:block;font-size:.8em;color:var(--muted);margin-bottom:6px;}
+input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:1em;}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);}
+textarea{min-height:80px;resize:vertical;}
+select.level-select{border-color:var(--accent);color:var(--accent);font-weight:700;}
+.btn-row{display:flex;gap:10px;margin-top:20px;}
+.btn{padding:10px 20px;border-radius:8px;border:none;cursor:pointer;font-size:.95em;font-weight:600;}
+.btn-save{background:var(--accent);color:#fff;flex:1;}
+.btn-cancel{background:var(--border);color:var(--muted);}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <span class="nav-title">✏️ Rediger frase</span>
+  <div class="nav-links"><a href="/admin/phrases">← Tilbake</a></div>
+</nav>
+<div class="container">
+  <h2>{{ phrase.norwegian }}</h2>
+  <div class="section">
+    <form method="post" action="/admin/phrases/edit/{{ phrase.id }}">
+      <div class="field"><label>Norsk frase</label><input name="norwegian" value="{{ phrase.norwegian }}" required/></div>
+      <div class="field"><label>Oversettelse</label><input name="translations" value="{{ phrase.translations | join(', ') }}" required/></div>
+      <div class="field"><label>Kategori</label><input name="category" value="{{ phrase.category or '' }}"/></div>
+      <div class="field"><label>Notater</label><textarea name="notes">{{ phrase.notes or '' }}</textarea></div>
+      <div class="field">
+        <label>Nivå</label>
+        <select name="level" class="level-select">
+          <option value="A" {% if phrase.level=='A' %}selected{% endif %}>A</option>
+          {% for lvl in levels %}{% if lvl != 'A' %}<option value="{{ lvl }}" {% if phrase.level==lvl %}selected{% endif %}>{{ lvl }}</option>{% endif %}{% endfor %}
+        </select>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-save" type="submit">💾 Lagre</button>
+        <a href="/admin/phrases"><button class="btn btn-cancel" type="button">Avbryt</button></a>
+      </div>
+    </form>
+  </div>
 </div>
-{% endblock %}
+</body>
+</html>

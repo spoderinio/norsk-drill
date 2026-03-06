@@ -1,96 +1,149 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin – Fraser</title>
+<style>
+:root{--bg:#0f1117;--card:#1a1d27;--border:#2a2d3e;--accent:#4f8ef7;--green:#2ecc71;--red:#e74c3c;--text:#e0e0e0;--muted:#666;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;}
+.nav{background:var(--card);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;}
+.nav-title{font-weight:700;color:var(--accent);}
+.nav-links a{color:var(--muted);text-decoration:none;margin-left:14px;font-size:.9em;}
+.container{max-width:1000px;margin:0 auto;padding:24px 16px;}
+h2{margin-bottom:20px;}
+.section{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px;}
+.section h3{margin-bottom:14px;font-size:1em;color:var(--muted);}
+.form-row{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin-bottom:8px;}
+.f{flex:1;min-width:120px;} .f-sm{flex:0 0 80px;}
+label{display:block;font-size:.78em;color:var(--muted);margin-bottom:4px;}
+input,select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:.9em;}
+input:focus,select:focus{outline:none;border-color:var(--accent);}
+textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:.9em;min-height:90px;resize:vertical;}
+.level-select{border-color:var(--accent);color:var(--accent);font-weight:700;}
+.btn{padding:9px 16px;border-radius:8px;border:none;cursor:pointer;font-size:.9em;font-weight:600;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-danger{background:#3a1a1a;color:var(--red);border:1px solid var(--red);font-size:.8em;padding:5px 9px;}
+.btn-danger:hover{background:var(--red);color:#fff;}
+.btn-edit{background:#1a2a4a;color:var(--accent);border:1px solid #2a3a6a;font-size:.8em;padding:5px 9px;}
+.btn-edit:hover{background:#2a3a6a;}
+.msg{padding:10px 14px;border-radius:8px;margin-bottom:16px;font-size:.9em;}
+.msg-ok{background:#1a3a1a;border:1px solid var(--green);color:var(--green);}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:.82em;}
+th{text-align:left;padding:8px;border-bottom:2px solid var(--border);color:var(--muted);font-size:.78em;}
+td{padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.badge-level{background:#2a2d3e;color:var(--muted);padding:2px 7px;border-radius:10px;font-size:.75em;}
+.badge-level.A{background:#1a2a1a;color:#5ecc71;}
+.badge-level.B11{background:#2a1a3a;color:#b07edb;}
+.badge-level.B12{background:#2a2a1a;color:#f0c040;}
+.badge-level.B21{background:#2a1a1a;color:#e07050;}
+.badge-level.B22{background:#1a2a2a;color:#40c0c0;}
+.trans{color:var(--muted);font-size:.82em;}
+.phrase-text{color:#f0d080;}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <span class="nav-title">🗣️ Admin – Fraser</span>
+  <div class="nav-links">
+    <a href="/practice/phrases">▶ Øv</a>
+    <a href="/admin/">← Admin</a>
+    <a href="/">🏠</a>
+  </div>
+</nav>
 
-{% block content %}
-<div>
-    <h2>🗣️ Manage Phrases</h2>
-    
-    <!-- Import Section -->
-    <div class="card" style="margin: 2rem 0;">
-        <h3>Import Phrases</h3>
-        
-        <!-- TEXT IMPORT -->
-        <div style="margin-bottom: 2rem;">
-            <h4 style="margin-bottom: 0.5rem;">Import from Text</h4>
-            <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9rem;">
-                Format: <code>norwegian phrase – bulgarian translation</code>
-            </p>
-            <form action="/admin/phrases/import-text" method="POST">
-                <textarea 
-                    name="text_data" 
-                    rows="10" 
-                    placeholder="Paste your text here (one phrase per line)
-Example:
-om våren – през пролетта
-til høsten – следващата есен
-Hvordan er været? – Какво е времето?"
-                    style="margin-bottom: 1rem;"
-                ></textarea>
-                <button type="submit" class="btn">Import Text</button>
-            </form>
-        </div>
-        
-        <!-- CSV IMPORT -->
-        <div>
-            <h4 style="margin-bottom: 0.5rem;">Import from CSV</h4>
-            <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9rem;">
-                CSV format: <code>norwegian,translations,category,notes</code>
-            </p>
-            <form action="/admin/phrases/import-csv" method="POST" enctype="multipart/form-data">
-                <input type="file" name="file" accept=".csv" style="margin-bottom: 1rem;">
-                <button type="submit" class="btn">Import CSV</button>
-            </form>
-        </div>
-    </div>
+<div class="container">
+  {% if request.query_params.get('added') %}
+  <div class="msg msg-ok">✅ Lagt til: {{ request.query_params.get('added') }} | Hoppet over: {{ request.query_params.get('skipped','0') }}</div>
+  {% endif %}
 
-    <!-- Phrases List -->
-    <div class="card">
-        <h3>All Phrases ({{ phrases|length }})</h3>
-        
-        {% if phrases %}
-        <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
-            <thead>
-                <tr style="border-bottom: 2px solid var(--border);">
-                    <th style="text-align: left; padding: 0.75rem;">Norwegian</th>
-                    <th style="text-align: left; padding: 0.75rem;">Translations</th>
-                    <th style="text-align: left; padding: 0.75rem;">Category</th>
-                    <th style="text-align: right; padding: 0.75rem;">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for phrase in phrases %}
-                <tr style="border-bottom: 1px solid var(--border);">
-                    <td style="padding: 0.75rem; font-weight: 600;">
-                        {{ phrase.norwegian }}
-                    </td>
-                    <td style="padding: 0.75rem;">
-                        {{ ', '.join(phrase.translations) if phrase.translations else '' }}
-                    </td>
-                    <td style="padding: 0.75rem;">
-                        {% if phrase.category %}
-                        <span style="background: var(--card-bg); padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.875rem;">
-                            {{ phrase.category }}
-                        </span>
-                        {% endif %}
-                    </td>
-                    <td style="padding: 0.75rem; text-align: right;">
-                        <a href="/admin/phrases/{{ phrase.id }}/edit" style="background: var(--accent); color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 0.25rem; text-decoration: none; display: inline-block; margin-right: 0.5rem;">
-                            ✏️ Edit
-                        </a>
-                        <form action="/admin/phrases/{{ phrase.id }}/delete" method="POST" style="display: inline;" onsubmit="return confirm('Delete this phrase?');">
-                            <button type="submit" style="background: var(--error); color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 0.25rem; cursor: pointer;">
-                                🗑️ Delete
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% else %}
-        <p style="color: var(--text-secondary); text-align: center; padding: 2rem;">
-            No phrases yet. Import some to get started!
-        </p>
-        {% endif %}
+  <h2>🗣️ Fraser</h2>
+
+  <div class="section">
+    <h3>➕ Legg til frase</h3>
+    <form method="post" action="/admin/phrases/add">
+      <div class="form-row">
+        <div class="f" style="flex:2"><label>Norsk frase</label><input name="norwegian" placeholder="om våren" required/></div>
+        <div class="f" style="flex:2"><label>Oversettelse</label><input name="translations" placeholder="през пролетта" required/></div>
+        <div class="f"><label>Kategori</label><input name="category" placeholder="tid, sted..."/></div>
+        <div class="f-sm">
+          <label>Nivå</label>
+          <select name="level" class="level-select">
+            <option value="A">A</option>
+            {% for lvl in levels %}{% if lvl != 'A' %}<option value="{{ lvl }}">{{ lvl }}</option>{% endif %}{% endfor %}
+          </select>
+        </div>
+        <div><label>&nbsp;</label><button class="btn btn-primary" type="submit">➕</button></div>
+      </div>
+    </form>
+  </div>
+
+  <div class="section">
+    <h3>📝 Importer fra tekst</h3>
+    <p style="font-size:.8em;color:var(--muted);margin-bottom:10px;">Format: <code>om våren – през пролетта</code> (én per linje)</p>
+    <form method="post" action="/admin/phrases/import-text">
+      <div style="margin-bottom:10px;"><textarea name="text_data" placeholder="om våren – през пролетта&#10;til høsten – следващата есен&#10;Hvordan er været? – Какво е времето?"></textarea></div>
+      <div class="form-row" style="align-items:flex-end;">
+        <div class="f-sm">
+          <label>Nivå</label>
+          <select name="level" class="level-select">
+            <option value="A">A</option>
+            {% for lvl in levels %}{% if lvl != 'A' %}<option value="{{ lvl }}">{{ lvl }}</option>{% endif %}{% endfor %}
+          </select>
+        </div>
+        <div><label>&nbsp;</label><button class="btn btn-primary" type="submit">📥 Importer</button></div>
+      </div>
+    </form>
+  </div>
+
+  <div class="section">
+    <h3>📂 Importer CSV</h3>
+    <p style="font-size:.8em;color:var(--muted);margin-bottom:10px;">Kolonner: <code>norwegian, translations, category, notes</code></p>
+    <form method="post" action="/admin/phrases/import-csv" enctype="multipart/form-data">
+      <div class="form-row" style="align-items:flex-end;">
+        <div class="f"><label>CSV-fil</label><input type="file" name="file" accept=".csv" required/></div>
+        <div class="f-sm">
+          <label>Nivå</label>
+          <select name="level" class="level-select">
+            <option value="A">A</option>
+            {% for lvl in levels %}{% if lvl != 'A' %}<option value="{{ lvl }}">{{ lvl }}</option>{% endif %}{% endfor %}
+          </select>
+        </div>
+        <div><label>&nbsp;</label><button class="btn btn-primary" type="submit">📥 Importer</button></div>
+      </div>
+    </form>
+  </div>
+
+  <div class="section">
+    <h3>📋 Alle fraser ({{ phrases|length }})</h3>
+    {% if phrases %}
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>Frase</th><th>Oversettelse</th><th>Kategori</th><th>Nivå</th><th></th></tr></thead>
+      <tbody>
+      {% for p in phrases %}
+      <tr>
+        <td class="phrase-text">{{ p.norwegian }}</td>
+        <td class="trans">{{ p.translations | join(', ') }}</td>
+        <td style="color:var(--muted);font-size:.8em;">{{ p.category or '—' }}</td>
+        <td><span class="badge-level {{ p.level.replace('.','') }}">{{ p.level }}</span></td>
+        <td>
+          <a href="/admin/phrases/edit/{{ p.id }}"><button class="btn btn-edit">✏️</button></a>
+          <form method="post" action="/admin/phrases/delete/{{ p.id }}" style="display:inline;" onsubmit="return confirm('Slett?')">
+            <button class="btn btn-danger" type="submit">🗑</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
     </div>
+    {% else %}
+    <p style="color:var(--muted);text-align:center;padding:20px;">Ingen fraser ennå.</p>
+    {% endif %}
+  </div>
 </div>
-{% endblock %}
+</body>
+</html>

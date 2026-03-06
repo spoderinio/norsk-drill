@@ -1,74 +1,139 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin – Adjektiv</title>
+<style>
+:root{--bg:#0f1117;--card:#1a1d27;--border:#2a2d3e;--accent:#4f8ef7;--green:#2ecc71;--red:#e74c3c;--text:#e0e0e0;--muted:#666;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;}
+.nav{background:var(--card);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;}
+.nav-title{font-weight:700;color:var(--accent);}
+.nav-links a{color:var(--muted);text-decoration:none;margin-left:14px;font-size:.9em;}
+.container{max-width:1000px;margin:0 auto;padding:24px 16px;}
+h2{margin-bottom:20px;}
+.section{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px;}
+.section h3{margin-bottom:14px;font-size:1em;color:var(--muted);}
+.form-row{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin-bottom:8px;}
+.f{flex:1;min-width:100px;} .f-sm{flex:0 0 80px;}
+label{display:block;font-size:.78em;color:var(--muted);margin-bottom:4px;}
+input,select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:.9em;}
+input:focus,select:focus{outline:none;border-color:var(--accent);}
+textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:.9em;min-height:90px;resize:vertical;}
+.level-select{border-color:var(--accent);color:var(--accent);font-weight:700;}
+.btn{padding:9px 16px;border-radius:8px;border:none;cursor:pointer;font-size:.9em;font-weight:600;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-danger{background:#3a1a1a;color:var(--red);border:1px solid var(--red);font-size:.8em;padding:5px 9px;}
+.btn-danger:hover{background:var(--red);color:#fff;}
+.btn-edit{background:#1a2a4a;color:var(--accent);border:1px solid #2a3a6a;font-size:.8em;padding:5px 9px;}
+.btn-edit:hover{background:#2a3a6a;}
+.msg{padding:10px 14px;border-radius:8px;margin-bottom:16px;font-size:.9em;}
+.msg-ok{background:#1a3a1a;border:1px solid var(--green);color:var(--green);}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:.82em;}
+th{text-align:left;padding:8px;border-bottom:2px solid var(--border);color:var(--muted);font-size:.78em;}
+td{padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.badge-level{background:#2a2d3e;color:var(--muted);padding:2px 7px;border-radius:10px;font-size:.75em;}
+.badge-level.A{background:#1a2a1a;color:#5ecc71;}
+.badge-level.B11{background:#2a1a3a;color:#b07edb;}
+.badge-level.B12{background:#2a2a1a;color:#f0c040;}
+.badge-level.B21{background:#2a1a1a;color:#e07050;}
+.badge-level.B22{background:#1a2a2a;color:#40c0c0;}
+.group-badge{background:#1a3a2a;color:#60d090;padding:2px 7px;border-radius:8px;font-size:.75em;}
+.trans{color:var(--muted);font-size:.82em;}
+.base{font-weight:600;color:#a0e0a0;}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <span class="nav-title">🎨 Admin – Adjektiv</span>
+  <div class="nav-links">
+    <a href="/practice/adjectives">▶ Øv</a>
+    <a href="/admin/">← Admin</a>
+    <a href="/">🏠</a>
+  </div>
+</nav>
 
-{% block content %}
-<h2 style="margin-bottom: 2rem;">Manage Adjectives</h2>
+<div class="container">
+  {% if request.query_params.get('added') %}
+  <div class="msg msg-ok">✅ Lagt til: {{ request.query_params.get('added') }} | Hoppet over: {{ request.query_params.get('skipped','0') }}</div>
+  {% endif %}
 
-<!-- Import Section -->
-<div class="card" style="margin-bottom: 2rem;">
-    <h3 style="margin-bottom: 1rem;">Import Adjectives</h3>
-    
-    <div>
-        <h4 style="margin-bottom: 0.5rem;">Import from CSV</h4>
-        <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9rem;">
-            CSV with columns: <code>base,neuter,plural,translations,group,group_description</code>
-        </p>
-        <form action="/admin/adjectives/import-csv" method="POST" enctype="multipart/form-data">
-            <input type="file" name="file" accept=".csv" style="margin-bottom: 1rem;">
-            <button type="submit" class="btn">Import CSV</button>
-        </form>
-    </div>
-</div>
+  <h2>🎨 Adjektiv</h2>
 
-<!-- Adjective List -->
-<div class="card">
-    <h3 style="margin-bottom: 1rem;">All Adjectives ({{ adjectives|length }})</h3>
-    
+  <div class="section">
+    <h3>➕ Legg til adjektiv</h3>
+    <form method="post" action="/admin/adjectives/add">
+      <div class="form-row">
+        <div class="f"><label>Grunnform (utrum)</label><input name="base" placeholder="stor" required/></div>
+        <div class="f"><label>Intetkjønn</label><input name="neuter" placeholder="stort"/></div>
+        <div class="f"><label>Flertall</label><input name="plural" placeholder="store"/></div>
+        <div class="f"><label>Oversettelse</label><input name="translations" placeholder="stor, stor" required/></div>
+        <div class="f-sm">
+          <label>Nivå</label>
+          <select name="level" class="level-select">
+            <option value="A">A</option>
+            {% for lvl in levels %}{% if lvl != 'A' %}<option value="{{ lvl }}">{{ lvl }}</option>{% endif %}{% endfor %}
+          </select>
+        </div>
+        <div><label>&nbsp;</label><button class="btn btn-primary" type="submit">➕</button></div>
+      </div>
+      <div class="form-row">
+        <div class="f"><label>Gruppe</label><input name="group" placeholder="1, 2..."/></div>
+        <div class="f" style="flex:2"><label>Gruppebeskrivelse</label><input name="group_description" placeholder="Adjektiv som ikke endres i intetkjønn"/></div>
+      </div>
+    </form>
+  </div>
+
+  <div class="section">
+    <h3>📂 Importer CSV</h3>
+    <p style="font-size:.8em;color:var(--muted);margin-bottom:10px;">Kolonner: <code>base, neuter, plural, translations, group, group_description</code></p>
+    <form method="post" action="/admin/adjectives/import-csv" enctype="multipart/form-data">
+      <div class="form-row" style="align-items:flex-end;">
+        <div class="f"><label>CSV-fil</label><input type="file" name="file" accept=".csv" required/></div>
+        <div class="f-sm">
+          <label>Nivå</label>
+          <select name="level" class="level-select">
+            <option value="A">A</option>
+            {% for lvl in levels %}{% if lvl != 'A' %}<option value="{{ lvl }}">{{ lvl }}</option>{% endif %}{% endfor %}
+          </select>
+        </div>
+        <div><label>&nbsp;</label><button class="btn btn-primary" type="submit">📥 Importer</button></div>
+      </div>
+    </form>
+  </div>
+
+  <div class="section">
+    <h3>📋 Alle adjektiv ({{ adjectives|length }})</h3>
     {% if adjectives %}
-    <div style="overflow-x: auto;">
-        <table style="width: 100%; border-collapse: collapse;">
-            <thead>
-                <tr style="border-bottom: 2px solid var(--border);">
-                    <th style="padding: 0.75rem; text-align: left;">Base</th>
-                    <th style="padding: 0.75rem; text-align: left;">Neuter</th>
-                    <th style="padding: 0.75rem; text-align: left;">Plural</th>
-                    <th style="padding: 0.75rem; text-align: left;">Group</th>
-                    <th style="padding: 0.75rem; text-align: left;">Translations</th>
-                    <th style="padding: 0.75rem; text-align: right;">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for adj in adjectives %}
-                <tr style="border-bottom: 1px solid var(--border);">
-                    <td style="padding: 0.75rem; font-weight: 600;">{{ adj.base }}</td>
-                    <td style="padding: 0.75rem;">{{ adj.neuter or '-' }}</td>
-                    <td style="padding: 0.75rem;">{{ adj.plural or '-' }}</td>
-                    <td style="padding: 0.75rem;">
-                        {% if adj.group %}
-                        <span style="background: var(--card-bg); padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.875rem;">
-                            {{ adj.group }}
-                        </span>
-                        {% else %}
-                        -
-                        {% endif %}
-                    </td>
-                    <td style="padding: 0.75rem;">{{ adj.translations|join(', ') if adj.translations else '' }}</td>
-                    <td style="padding: 0.75rem; text-align: right;">
-                        <a href="/admin/adjectives/{{ adj.id }}/edit" style="background: var(--accent); color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 0.25rem; text-decoration: none; display: inline-block; margin-right: 0.5rem;">
-                            ✏️ Edit
-                        </a>
-                        <form action="/admin/adjectives/{{ adj.id }}/delete" method="POST" style="display: inline;" onsubmit="return confirm('Delete this adjective?');">
-                            <button type="submit" style="background: var(--error); color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 0.25rem; cursor: pointer;">
-                                🗑️ Delete
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>Grunnform</th><th>Intetkjønn</th><th>Flertall</th><th>Oversettelse</th><th>Gruppe</th><th>Nivå</th><th></th></tr></thead>
+      <tbody>
+      {% for a in adjectives %}
+      <tr>
+        <td class="base">{{ a.base }}</td>
+        <td>{{ a.neuter or '—' }}</td>
+        <td>{{ a.plural or '—' }}</td>
+        <td class="trans">{{ a.translations | join(', ') }}</td>
+        <td>{% if a.group %}<span class="group-badge">{{ a.group }}</span>{% else %}—{% endif %}</td>
+        <td><span class="badge-level {{ a.level.replace('.','') }}">{{ a.level }}</span></td>
+        <td>
+          <a href="/admin/adjectives/edit/{{ a.id }}"><button class="btn btn-edit">✏️</button></a>
+          <form method="post" action="/admin/adjectives/delete/{{ a.id }}" style="display:inline;" onsubmit="return confirm('Slett?')">
+            <button class="btn btn-danger" type="submit">🗑</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
     </div>
     {% else %}
-    <p style="color: var(--text-secondary); text-align: center; padding: 2rem;">No adjectives yet. Import some to get started!</p>
+    <p style="color:var(--muted);text-align:center;padding:20px;">Ingen adjektiv ennå.</p>
     {% endif %}
+  </div>
 </div>
-{% endblock %}
+</body>
+</html>

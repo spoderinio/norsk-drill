@@ -1,260 +1,72 @@
-{% extends "base.html" %}
-
-{% block content %}
-<div style="max-width: 900px; margin: 0 auto;">
-    <h2 style="margin-bottom: 2rem;">🔍 Search Norwegian Vocabulary</h2>
-
-    <!-- Search Input -->
-    <div class="card" style="margin-bottom: 2rem;">
-        <div style="position: relative;">
-            <input 
-                type="text" 
-                id="search-input" 
-                placeholder="Търси на норвежки или български..."
-                style="font-size: 1.1rem; padding-right: 3rem;"
-                autofocus
-            >
-            <div style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); font-size: 1.5rem; color: var(--text-secondary);">
-                🔍
-            </div>
-        </div>
-        <p style="color: var(--text-secondary); margin-top: 0.5rem; font-size: 0.9rem;">
-            Търси думи на норвежки или български. Резултатите се показват автоматично.
-        </p>
-    </div>
-
-    <!-- Loading indicator -->
-    <div id="loading" style="display: none; text-align: center; padding: 2rem;">
-        <p style="color: var(--text-secondary);">Търсене...</p>
-    </div>
-
-    <!-- No results message -->
-    <div id="no-results" style="display: none; text-align: center; padding: 2rem;">
-        <p style="color: var(--text-secondary); font-size: 1.1rem;">
-            Няма резултати за "<span id="no-results-query"></span>"
-        </p>
-    </div>
-
-    <!-- Results -->
-    <div id="results" style="display: none;">
-        <!-- Adjectives -->
-        <div id="adjectives-section" style="display: none; margin-bottom: 2rem;">
-            <h3 style="margin-bottom: 1rem;">📚 ПРИЛАГАТЕЛНИ</h3>
-            <div id="adjectives-results"></div>
-        </div>
-
-        <!-- Verbs -->
-        <div id="verbs-section" style="display: none; margin-bottom: 2rem;">
-            <h3 style="margin-bottom: 1rem;">📗 ГЛАГОЛИ</h3>
-            <div id="verbs-results"></div>
-        </div>
-
-        <!-- Nouns -->
-        <div id="nouns-section" style="display: none; margin-bottom: 2rem;">
-            <h3 style="margin-bottom: 1rem;">📘 СЪЩЕСТВИТЕЛНИ</h3>
-            <div id="nouns-results"></div>
-        </div>
-    </div>
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Søk – Norsk Drill</title>
+<style>
+:root{--bg:#0f1117;--card:#1a1d27;--border:#2a2d3e;--accent:#4f8ef7;--text:#e0e0e0;--muted:#666;--green:#2ecc71;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;}
+.nav{background:var(--card);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;}
+.nav-title{font-weight:700;color:var(--accent);}
+.nav-links a{color:var(--muted);text-decoration:none;margin-left:14px;font-size:.9em;}
+.container{max-width:700px;margin:0 auto;padding:24px 16px;}
+.search-bar{display:flex;gap:8px;margin-bottom:24px;}
+.search-bar input{flex:1;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 16px;color:var(--text);font-size:1em;}
+.search-bar input:focus{outline:none;border-color:var(--accent);}
+.btn{padding:12px 20px;border-radius:10px;border:none;cursor:pointer;background:var(--accent);color:#fff;font-size:.95em;font-weight:600;}
+.result-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;}
+.type-badge{padding:3px 10px;border-radius:10px;font-size:.75em;font-weight:700;min-width:70px;text-align:center;}
+.type-noun{background:#1a2a4a;color:#7abcff;}
+.type-verb{background:#1a3a2a;color:#5ecc71;}
+.type-adjective{background:#2a1a3a;color:#b07edb;}
+.type-phrase{background:#3a3a1a;color:#f0c040;}
+.type-question_word{background:#2a1a2a;color:#e07edb;}
+.result-main{flex:1;}
+.result-norwegian{font-size:1.05em;font-weight:600;}
+.result-trans{font-size:.85em;color:var(--muted);margin-top:2px;}
+.level-badge{font-size:.72em;background:#2a2d3e;color:var(--muted);padding:2px 8px;border-radius:8px;white-space:nowrap;}
+#results-info{color:var(--muted);font-size:.85em;margin-bottom:14px;}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <span class="nav-title">🔍 Søk</span>
+  <div class="nav-links"><a href="/">🏠 Hjem</a></div>
+</nav>
+<div class="container">
+  <div class="search-bar">
+    <input type="text" id="search-input" placeholder="Søk på norsk eller bulgarsk..." value="{{ query }}" autocomplete="off"/>
+    <button class="btn" onclick="doSearch()">🔍 Søk</button>
+  </div>
+  <div id="results-info"></div>
+  <div id="results"></div>
 </div>
-
 <script>
-let searchTimeout = null;
+const TYPE_LABELS = {noun:'Substantiv',verb:'Verb',adjective:'Adjektiv',phrase:'Frase',question_word:'Spørreord'};
+const TYPE_CLASSES = {noun:'type-noun',verb:'type-verb',adjective:'type-adjective',phrase:'type-phrase',question_word:'type-question_word'};
 
-// Search input event listener
-document.getElementById('search-input').addEventListener('input', function(e) {
-    const query = e.target.value.trim();
-    
-    // Clear previous timeout
-    if (searchTimeout) {
-        clearTimeout(searchTimeout);
-    }
-    
-    // Hide all sections
-    document.getElementById('results').style.display = 'none';
-    document.getElementById('no-results').style.display = 'none';
-    document.getElementById('loading').style.display = 'none';
-    
-    if (query.length === 0) {
-        return;
-    }
-    
-    // Show loading
-    document.getElementById('loading').style.display = 'block';
-    
-    // Debounce search (300ms)
-    searchTimeout = setTimeout(() => {
-        performSearch(query);
-    }, 300);
-});
-
-async function performSearch(query) {
-    try {
-        const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
-        const data = await response.json();
-        
-        document.getElementById('loading').style.display = 'none';
-        
-        const totalResults = data.nouns.length + data.verbs.length + data.adjectives.length;
-        
-        if (totalResults === 0) {
-            document.getElementById('no-results').style.display = 'block';
-            document.getElementById('no-results-query').textContent = query;
-            return;
-        }
-        
-        document.getElementById('results').style.display = 'block';
-        
-        // Display adjectives
-        displayAdjectives(data.adjectives);
-        
-        // Display verbs
-        displayVerbs(data.verbs);
-        
-        // Display nouns
-        displayNouns(data.nouns);
-        
-    } catch (error) {
-        console.error('Search error:', error);
-        document.getElementById('loading').style.display = 'none';
-    }
+async function doSearch(){
+  const q = document.getElementById('search-input').value.trim();
+  if(q.length < 2){ document.getElementById('results').innerHTML=''; document.getElementById('results-info').textContent=''; return; }
+  const resp = await fetch('/search/results?q='+encodeURIComponent(q));
+  const data = await resp.json();
+  const results = data.results || [];
+  document.getElementById('results-info').textContent = results.length ? `${results.length} resultat(er) for "${q}"` : `Ingen resultater for "${q}"`;
+  document.getElementById('results').innerHTML = results.map(r => `
+    <div class="result-item">
+      <span class="type-badge ${TYPE_CLASSES[r.type]||''}">${TYPE_LABELS[r.type]||r.type}</span>
+      <div class="result-main">
+        <div class="result-norwegian">${r.norwegian}</div>
+        <div class="result-trans">${(r.translations||[]).join(', ')}</div>
+      </div>
+      ${r.level && r.level !== '—' ? `<span class="level-badge">${r.level}</span>` : ''}
+    </div>`).join('');
 }
 
-function displayAdjectives(adjectives) {
-    const section = document.getElementById('adjectives-section');
-    const container = document.getElementById('adjectives-results');
-    
-    if (adjectives.length === 0) {
-        section.style.display = 'none';
-        return;
-    }
-    
-    section.style.display = 'block';
-    container.innerHTML = '';
-    
-    adjectives.forEach(adj => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.style.marginBottom = '1rem';
-        
-        let forms = adj.base;
-        if (adj.neuter) forms += `, ${adj.neuter}`;
-        if (adj.plural) forms += `, ${adj.plural}`;
-        
-        let groupBadge = '';
-        if (adj.group) {
-            groupBadge = `
-                <div style="background: var(--accent); color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.85rem; display: inline-block; margin-bottom: 0.5rem;">
-                    Група ${adj.group}
-                </div>
-                ${adj.group_description ? `<p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.5rem;">${adj.group_description}</p>` : ''}
-            `;
-        }
-        
-        card.innerHTML = `
-            <div style="font-size: 1.3rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--accent);">
-                ${forms}
-            </div>
-            ${groupBadge}
-            <div style="margin-bottom: 0.75rem;">
-                <span style="font-weight: 600;">🇧🇬 </span>
-                <span style="color: var(--text-secondary);">${adj.translations.join(', ')}</span>
-            </div>
-            <a href="/practice/adjectives" class="btn btn-secondary" style="display: inline-block; text-decoration: none;">
-                Practice Adjectives →
-            </a>
-        `;
-        
-        container.appendChild(card);
-    });
-}
-
-function displayVerbs(verbs) {
-    const section = document.getElementById('verbs-section');
-    const container = document.getElementById('verbs-results');
-    
-    if (verbs.length === 0) {
-        section.style.display = 'none';
-        return;
-    }
-    
-    section.style.display = 'block';
-    container.innerHTML = '';
-    
-    verbs.forEach(verb => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.style.marginBottom = '1rem';
-        
-        let forms = verb.infinitive;
-        if (verb.presens) forms += `, ${verb.presens}`;
-        if (verb.preteritum) forms += `, ${verb.preteritum}`;
-        if (verb.perfect_participle) forms += `, ${verb.perfect_participle}`;
-        
-        let groupBadge = '';
-        if (verb.group) {
-            const groupName = verb.group === 'неправилни' ? 'Неправилни глаголи' : `Група ${verb.group}`;
-            groupBadge = `
-                <div style="background: var(--accent); color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.85rem; display: inline-block; margin-bottom: 0.5rem;">
-                    ${groupName}
-                </div>
-                ${verb.group_description ? `<p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.5rem;">${verb.group_description}</p>` : ''}
-            `;
-        }
-        
-        card.innerHTML = `
-            <div style="font-size: 1.3rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--accent);">
-                ${forms}
-            </div>
-            ${groupBadge}
-            <div style="margin-bottom: 0.75rem;">
-                <span style="font-weight: 600;">🇧🇬 </span>
-                <span style="color: var(--text-secondary);">${verb.translations.join(', ')}</span>
-            </div>
-            <a href="/practice/verbs" class="btn btn-secondary" style="display: inline-block; text-decoration: none;">
-                Practice Verbs →
-            </a>
-        `;
-        
-        container.appendChild(card);
-    });
-}
-
-function displayNouns(nouns) {
-    const section = document.getElementById('nouns-section');
-    const container = document.getElementById('nouns-results');
-    
-    if (nouns.length === 0) {
-        section.style.display = 'none';
-        return;
-    }
-    
-    section.style.display = 'block';
-    container.innerHTML = '';
-    
-    nouns.forEach(noun => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.style.marginBottom = '1rem';
-        
-        let forms = `${noun.article} ${noun.word}`;
-        if (noun.definite) forms += ` → ${noun.definite}`;
-        if (noun.plural) forms += `, ${noun.plural}`;
-        
-        card.innerHTML = `
-            <div style="font-size: 1.3rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--accent);">
-                ${forms}
-            </div>
-            <div style="margin-bottom: 0.75rem;">
-                <span style="font-weight: 600;">🇧🇬 </span>
-                <span style="color: var(--text-secondary);">${noun.translations.join(', ')}</span>
-            </div>
-            <a href="/practice/nouns" class="btn btn-secondary" style="display: inline-block; text-decoration: none;">
-                Practice Nouns →
-            </a>
-        `;
-        
-        container.appendChild(card);
-    });
-}
+document.getElementById('search-input').addEventListener('keydown', e => { if(e.key==='Enter') doSearch(); });
+if('{{ query }}') doSearch();
 </script>
-{% endblock %}
+</body>
+</html>

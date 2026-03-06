@@ -1,96 +1,64 @@
-{% extends "base.html" %}
-
-{% block content %}
-<div style="max-width: 600px; margin: 0 auto;">
-    <h2>✏️ Edit Adjective</h2>
-    
-    <div class="card" style="margin-top: 2rem;">
-        <form method="POST" action="/admin/adjectives/{{ adjective.id }}/edit">
-            <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
-                    Base form *
-                </label>
-                <input 
-                    type="text" 
-                    name="base" 
-                    value="{{ adjective.base }}"
-                    required
-                    placeholder="stor"
-                >
-            </div>
-
-            <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
-                    Neuter form
-                </label>
-                <input 
-                    type="text" 
-                    name="neuter" 
-                    value="{{ adjective.neuter or '' }}"
-                    placeholder="stort"
-                >
-            </div>
-
-            <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
-                    Plural form
-                </label>
-                <input 
-                    type="text" 
-                    name="plural" 
-                    value="{{ adjective.plural or '' }}"
-                    placeholder="store"
-                >
-            </div>
-
-            <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
-                    Translations * (separated by |)
-                </label>
-                <input 
-                    type="text" 
-                    name="translations" 
-                    value="{{ '|'.join(adjective.translations) if adjective.translations else '' }}"
-                    required
-                    placeholder="голям|едър"
-                >
-                <small style="color: var(--text-secondary); display: block; margin-top: 0.25rem;">
-                    Use | to separate multiple translations
-                </small>
-            </div>
-
-            <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
-                    Group
-                </label>
-                <input 
-                    type="text" 
-                    name="group" 
-                    value="{{ adjective.group or '' }}"
-                    placeholder="Група 1"
-                >
-            </div>
-
-            <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
-                    Group Description
-                </label>
-                <textarea 
-                    name="group_description" 
-                    rows="3"
-                    placeholder="I-ва група: Regular adjectives..."
-                >{{ adjective.group_description or '' }}</textarea>
-            </div>
-
-            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                <button type="submit" class="btn">
-                    💾 Save Changes
-                </button>
-                <a href="/admin/adjectives" class="btn btn-secondary" style="text-decoration: none;">
-                    ❌ Cancel
-                </a>
-            </div>
-        </form>
-    </div>
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Rediger adjektiv</title>
+<style>
+:root{--bg:#0f1117;--card:#1a1d27;--border:#2a2d3e;--accent:#4f8ef7;--text:#e0e0e0;--muted:#666;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;}
+.nav{background:var(--card);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;}
+.nav-title{font-weight:700;color:var(--accent);}
+.nav-links a{color:var(--muted);text-decoration:none;margin-left:14px;font-size:.9em;}
+.container{max-width:600px;margin:0 auto;padding:30px 20px;}
+h2{margin-bottom:24px;}
+.section{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;}
+.field{margin-bottom:14px;}
+label{display:block;font-size:.8em;color:var(--muted);margin-bottom:6px;}
+input,select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:1em;}
+input:focus,select:focus{outline:none;border-color:var(--accent);}
+select.level-select{border-color:var(--accent);color:var(--accent);font-weight:700;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.btn-row{display:flex;gap:10px;margin-top:20px;}
+.btn{padding:10px 20px;border-radius:8px;border:none;cursor:pointer;font-size:.95em;font-weight:600;}
+.btn-save{background:var(--accent);color:#fff;flex:1;}
+.btn-cancel{background:var(--border);color:var(--muted);}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <span class="nav-title">✏️ Rediger adjektiv</span>
+  <div class="nav-links"><a href="/admin/adjectives">← Tilbake</a></div>
+</nav>
+<div class="container">
+  <h2>{{ adjective.base }}</h2>
+  <div class="section">
+    <form method="post" action="/admin/adjectives/edit/{{ adjective.id }}">
+      <div class="row3">
+        <div class="field"><label>Grunnform</label><input name="base" value="{{ adjective.base }}" required/></div>
+        <div class="field"><label>Intetkjønn</label><input name="neuter" value="{{ adjective.neuter or '' }}"/></div>
+        <div class="field"><label>Flertall</label><input name="plural" value="{{ adjective.plural or '' }}"/></div>
+      </div>
+      <div class="field"><label>Oversettelse</label><input name="translations" value="{{ adjective.translations | join(', ') }}" required/></div>
+      <div class="row2">
+        <div class="field"><label>Gruppe</label><input name="group" value="{{ adjective.group or '' }}"/></div>
+        <div class="field"><label>Gruppebeskrivelse</label><input name="group_description" value="{{ adjective.group_description or '' }}"/></div>
+      </div>
+      <div class="field">
+        <label>Nivå</label>
+        <select name="level" class="level-select">
+          <option value="A" {% if adjective.level=='A' %}selected{% endif %}>A</option>
+          {% for lvl in levels %}{% if lvl != 'A' %}<option value="{{ lvl }}" {% if adjective.level==lvl %}selected{% endif %}>{{ lvl }}</option>{% endif %}{% endfor %}
+        </select>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-save" type="submit">💾 Lagre</button>
+        <a href="/admin/adjectives"><button class="btn btn-cancel" type="button">Avbryt</button></a>
+      </div>
+    </form>
+  </div>
 </div>
-{% endblock %}
+</body>
+</html>

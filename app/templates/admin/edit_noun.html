@@ -1,84 +1,69 @@
-{% extends "base.html" %}
-
-{% block content %}
-<div style="max-width: 600px; margin: 0 auto;">
-    <h2>✏️ Edit Noun</h2>
-    
-    <div class="card" style="margin-top: 2rem;">
-        <form method="POST" action="/admin/nouns/{{ noun.id }}/edit">
-            <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
-                    Article *
-                </label>
-                <select name="article" required style="width: 100%;">
-                    <option value="en" {% if noun.article == 'en' %}selected{% endif %}>en</option>
-                    <option value="ei" {% if noun.article == 'ei' %}selected{% endif %}>ei</option>
-                    <option value="et" {% if noun.article == 'et' %}selected{% endif %}>et</option>
-                </select>
-            </div>
-
-            <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
-                    Word *
-                </label>
-                <input 
-                    type="text" 
-                    name="word" 
-                    value="{{ noun.word }}"
-                    required
-                    placeholder="bil"
-                >
-            </div>
-
-            <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
-                    Definite form
-                </label>
-                <input 
-                    type="text" 
-                    name="definite" 
-                    value="{{ noun.definite or '' }}"
-                    placeholder="bilen"
-                >
-            </div>
-
-            <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
-                    Plural form
-                </label>
-                <input 
-                    type="text" 
-                    name="plural" 
-                    value="{{ noun.plural or '' }}"
-                    placeholder="biler"
-                >
-            </div>
-
-            <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
-                    Translations * (separated by |)
-                </label>
-                <input 
-                    type="text" 
-                    name="translations" 
-                    value="{{ '|'.join(noun.translations) if noun.translations else '' }}"
-                    required
-                    placeholder="кола|автомобил"
-                >
-                <small style="color: var(--text-secondary); display: block; margin-top: 0.25rem;">
-                    Use | to separate multiple translations
-                </small>
-            </div>
-
-            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                <button type="submit" class="btn">
-                    💾 Save Changes
-                </button>
-                <a href="/admin/nouns" class="btn btn-secondary" style="text-decoration: none;">
-                    ❌ Cancel
-                </a>
-            </div>
-        </form>
-    </div>
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Rediger substantiv</title>
+<style>
+:root{--bg:#0f1117;--card:#1a1d27;--border:#2a2d3e;--accent:#4f8ef7;--text:#e0e0e0;--muted:#666;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;}
+.nav{background:var(--card);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;}
+.nav-title{font-weight:700;color:var(--accent);}
+.nav-links a{color:var(--muted);text-decoration:none;margin-left:14px;font-size:.9em;}
+.container{max-width:600px;margin:0 auto;padding:30px 20px;}
+h2{margin-bottom:24px;}
+.section{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;}
+.field{margin-bottom:16px;}
+label{display:block;font-size:.8em;color:var(--muted);margin-bottom:6px;}
+input,select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:1em;}
+input:focus,select:focus{outline:none;border-color:var(--accent);}
+select.level-select{border-color:var(--accent);color:var(--accent);font-weight:700;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.btn-row{display:flex;gap:10px;margin-top:20px;}
+.btn{padding:10px 20px;border-radius:8px;border:none;cursor:pointer;font-size:.95em;font-weight:600;}
+.btn-save{background:var(--accent);color:#fff;flex:1;}
+.btn-cancel{background:var(--border);color:var(--muted);}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <span class="nav-title">✏️ Rediger substantiv</span>
+  <div class="nav-links"><a href="/admin/nouns">← Tilbake</a></div>
+</nav>
+<div class="container">
+  <h2>{{ noun.article }} {{ noun.word }}</h2>
+  <div class="section">
+    <form method="post" action="/admin/nouns/edit/{{ noun.id }}">
+      <div class="row2">
+        <div class="field">
+          <label>Artikkel</label>
+          <select name="article">
+            <option {% if noun.article=='en' %}selected{% endif %}>en</option>
+            <option {% if noun.article=='ei' %}selected{% endif %}>ei</option>
+            <option {% if noun.article=='et' %}selected{% endif %}>et</option>
+          </select>
+        </div>
+        <div class="field"><label>Ord</label><input name="word" value="{{ noun.word }}" required/></div>
+      </div>
+      <div class="field"><label>Oversettelse (kommaseparert)</label><input name="translations" value="{{ noun.translations | join(', ') }}" required/></div>
+      <div class="row2">
+        <div class="field"><label>Bestemt form</label><input name="definite" value="{{ noun.definite or '' }}"/></div>
+        <div class="field"><label>Flertall</label><input name="plural" value="{{ noun.plural or '' }}"/></div>
+      </div>
+      <div class="field">
+        <label>Nivå</label>
+        <select name="level" class="level-select">
+          <option value="A" {% if noun.level=='A' %}selected{% endif %}>A</option>
+          {% for lvl in levels %}{% if lvl != 'A' %}<option value="{{ lvl }}" {% if noun.level==lvl %}selected{% endif %}>{{ lvl }}</option>{% endif %}{% endfor %}
+        </select>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-save" type="submit">💾 Lagre</button>
+        <a href="/admin/nouns"><button class="btn btn-cancel" type="button">Avbryt</button></a>
+      </div>
+    </form>
+  </div>
 </div>
-{% endblock %}
+</body>
+</html>
