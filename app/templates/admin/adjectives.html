@@ -87,6 +87,27 @@ td{padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:middle;}
   </div>
 
   <div class="section">
+    <h3>📝 Importer fra tekst</h3>
+    <p style="font-size:.8em;color:var(--muted);margin-bottom:10px;">Format: <code>stor – голям</code> eller <code>stor | stort | store – голям</code> (én per linje)</p>
+    <form method="post" action="/admin/adjectives/import-text">
+      <div style="margin-bottom:10px;">
+        <label>Tekst</label>
+        <textarea name="text_data" placeholder="stor – голям&#10;liten | lite | små – малък&#10;ny – нов"></textarea>
+      </div>
+      <div class="form-row" style="align-items:flex-end;">
+        <div class="f-sm">
+          <label>Nivå</label>
+          <select name="level" class="level-select">
+            <option value="A">A</option>
+            {% for lvl in levels %}{% if lvl != 'A' %}<option value="{{ lvl }}">{{ lvl }}</option>{% endif %}{% endfor %}
+          </select>
+        </div>
+        <div><label>&nbsp;</label><button class="btn btn-primary" type="submit">📥 Importer</button></div>
+      </div>
+    </form>
+  </div>
+
+  <div class="section">
     <h3>📂 Importer CSV</h3>
     <p style="font-size:.8em;color:var(--muted);margin-bottom:10px;">Kolonner: <code>base, neuter, plural, translations, group, group_description</code></p>
     <form method="post" action="/admin/adjectives/import-csv" enctype="multipart/form-data">

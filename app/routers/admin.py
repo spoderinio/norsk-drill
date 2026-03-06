@@ -158,6 +158,40 @@ async def add_verb(request: Request, db: AsyncSession = Depends(get_db),
     return RedirectResponse("/admin/verbs", status_code=303)
 
 
+@router.post("/verbs/import-text")
+async def import_verbs_text(request: Request, db: AsyncSession = Depends(get_db),
+                             text_data: str = Form(...), level: str = Form("A")):
+    """Format: å gå – ходя  OR  å gå | går | gikk | gått – ходя"""
+    added = skipped = 0
+    for line in text_data.strip().splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        sep = "–" if "–" in line else "-"
+        parts = line.split(sep, 1)
+        if len(parts) != 2:
+            continue
+        norwegian = parts[0].strip()
+        translation = parts[1].strip()
+        if not norwegian or not translation:
+            continue
+        # Parse optional conjugations: å gå | går | gikk | gått
+        conj_parts = [p.strip() for p in norwegian.split("|")]
+        infinitive = conj_parts[0]
+        presens = conj_parts[1] if len(conj_parts) > 1 else None
+        preteritum = conj_parts[2] if len(conj_parts) > 2 else None
+        perfect = conj_parts[3] if len(conj_parts) > 3 else None
+        result = await crud.create_verb(db, infinitive=infinitive, presens=presens,
+                                         preteritum=preteritum, perfect_participle=perfect,
+                                         translations=_parse_translations(translation),
+                                         level=level or "A")
+        if result:
+            added += 1
+        else:
+            skipped += 1
+    return RedirectResponse(f"/admin/verbs?added={added}&skipped={skipped}", status_code=303)
+
+
 @router.post("/verbs/import-csv")
 async def import_verbs_csv(request: Request, db: AsyncSession = Depends(get_db),
                             file: UploadFile = File(...), level: str = Form("A")):
@@ -235,6 +269,37 @@ async def add_adjective(request: Request, db: AsyncSession = Depends(get_db),
                                  group=group or None, group_description=group_description or None,
                                  level=level or "A")
     return RedirectResponse("/admin/adjectives", status_code=303)
+
+
+@router.post("/adjectives/import-text")
+async def import_adjectives_text(request: Request, db: AsyncSession = Depends(get_db),
+                                  text_data: str = Form(...), level: str = Form("A")):
+    """Format: stor – голям  OR  stor | stort | store – голям"""
+    added = skipped = 0
+    for line in text_data.strip().splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        sep = "–" if "–" in line else "-"
+        parts = line.split(sep, 1)
+        if len(parts) != 2:
+            continue
+        norwegian = parts[0].strip()
+        translation = parts[1].strip()
+        if not norwegian or not translation:
+            continue
+        conj_parts = [p.strip() for p in norwegian.split("|")]
+        base = conj_parts[0]
+        neuter = conj_parts[1] if len(conj_parts) > 1 else None
+        plural = conj_parts[2] if len(conj_parts) > 2 else None
+        result = await crud.create_adjective(db, base=base, neuter=neuter, plural=plural,
+                                              translations=_parse_translations(translation),
+                                              level=level or "A")
+        if result:
+            added += 1
+        else:
+            skipped += 1
+    return RedirectResponse(f"/admin/adjectives?added={added}&skipped={skipped}", status_code=303)
 
 
 @router.post("/adjectives/import-csv")

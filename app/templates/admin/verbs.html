@@ -70,7 +70,7 @@ td{padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:middle;}
         <div class="f"><label>Presens</label><input name="presens" placeholder="går"/></div>
         <div class="f"><label>Preteritum</label><input name="preteritum" placeholder="gikk"/></div>
         <div class="f"><label>Perfektum</label><input name="perfect_participle" placeholder="gått"/></div>
-        <div class="f"><label>Oversettelse</label><input name="translations" placeholder="gå, gange" required/></div>
+        <div class="f"><label>Oversettelse</label><input name="translations" placeholder="ходя, вървя" required/></div>
         <div class="f-sm">
           <label>Nivå</label>
           <select name="level" class="level-select">
@@ -83,6 +83,27 @@ td{padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:middle;}
       <div class="form-row">
         <div class="f"><label>Gruppe</label><input name="group" placeholder="1, 2, 3..."/></div>
         <div class="f" style="flex:2"><label>Gruppebeskrivelse</label><input name="group_description" placeholder="Verb som slutter på -er i presens"/></div>
+      </div>
+    </form>
+  </div>
+
+  <div class="section">
+    <h3>📝 Importer fra tekst</h3>
+    <p style="font-size:.8em;color:var(--muted);margin-bottom:10px;">Format: <code>å gå – ходя</code> eller <code>å gå | går | gikk | gått – ходя</code> (én per linje)</p>
+    <form method="post" action="/admin/verbs/import-text">
+      <div style="margin-bottom:10px;">
+        <label>Tekst</label>
+        <textarea name="text_data" placeholder="å gå – ходя&#10;å spise | spiser | spiste | spist – ям&#10;å drikke – пия"></textarea>
+      </div>
+      <div class="form-row" style="align-items:flex-end;">
+        <div class="f-sm">
+          <label>Nivå</label>
+          <select name="level" class="level-select">
+            <option value="A">A</option>
+            {% for lvl in levels %}{% if lvl != 'A' %}<option value="{{ lvl }}">{{ lvl }}</option>{% endif %}{% endfor %}
+          </select>
+        </div>
+        <div><label>&nbsp;</label><button class="btn btn-primary" type="submit">📥 Importer</button></div>
       </div>
     </form>
   </div>
