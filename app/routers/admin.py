@@ -92,7 +92,9 @@ async def import_nouns_text(request: Request, db: AsyncSession = Depends(get_db)
         words = norwegian.split()
         if len(words) < 2:
             continue
-        article = words[0]
+        # Normalize article - replace lookalike cyrillic chars with latin
+        article = words[0].lower()
+        article = article.replace("е", "e").replace("і", "i")  # cyrillic lookalikes
         word = " ".join(words[1:])
         if article not in ["en", "ei", "et"]:
             continue
