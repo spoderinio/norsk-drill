@@ -1,227 +1,63 @@
-# 🚀 NORSK DRILL v2.0 - DEPLOYMENT PACKAGE
+# Norsk Drill 🇳🇴
 
-## 📦 Какво съдържа този пакет?
+A self-hosted vocabulary practice app for learning Norwegian, built with FastAPI and SQLite. Runs on a Raspberry Pi and is accessible from any device on the local network.
 
-Това е **comprehensive update** на Norsk Drill приложението с **5 major функционалности**:
+## What it does
 
-✅ **Validation Fix** - Празни полета = грешни отговори  
-✅ **Parentheses Ignore** - Игнорира текст в скоби  
-✅ **Duplicate Checking** - Пропуска дубликати при импорт  
-✅ **Edit Functionality** - Редактиране на всички думи  
-✅ **Phrases (NEW!)** - Нова категория за фрази и изрази  
+Norsk Drill lets you add Norwegian vocabulary and practice it through flashcard-style exercises. You type the translation from memory, and the app tells you if you're right. Words are organized by category and level so you can focus on what you're currently studying.
 
----
+**Categories:**
+- **Substantiv** (Nouns) — practice article + word → Bulgarian translation
+- **Verb** — conjugate presens, preteritum, perfektum
+- **Adjektiv** — inflect neuter, plural forms + translation
+- **Fraser** (Phrases) — full phrase → translation
+- **Spørreord** (Question words) — hvem, hva, hvor, når, hvorfor... with example sentences
 
-## 📚 ДОКУМЕНТАЦИЯ (Прочети ПЪРВО!)
+**Levels:** Words are tagged A / B1.1 / B1.2 / B2.1 / B2.2. On the home page you select which level to practice — existing words default to A.
 
-### 🎯 Главен Guide:
-**START HERE:** `DEPLOYMENT_GUIDE.md`  
-- Пълна стъпка-по-стъпка инструкция
-- Troubleshooting
-- Testing
+**Other features:**
+- Text-to-speech pronunciation (Norwegian, browser-native)
+- Bulk import via CSV or plain text (`en hus – hus` format)
+- Search across all categories
+- Skip button — shows the full correct answer so you see it multiple times
+- Answer checking is case-insensitive and ignores trailing punctuation
 
-### 📋 File Mapping:
-**FILE_MAPPING.md**  
-- Списък на всички файлове
-- Къде отива всеки файл
-- Batch copy команди
-- Checklist
+## Tech stack
 
-### 🔧 Admin Changes:
-**admin_py_changes.md**  
-- Детайлни промени в admin.py
-- Code snippets
-- Alternative methods
+| Layer | Technology |
+|-------|-----------|
+| Backend | Python 3.11, FastAPI, SQLAlchemy (async) |
+| Database | SQLite via aiosqlite |
+| Templates | Jinja2 |
+| Frontend | Vanilla HTML/CSS/JS (no framework) |
+| Server | Uvicorn, systemd service |
+| Hardware | Raspberry Pi 4 |
 
----
+## Project structure
 
-## 📁 ФАЙЛОВЕ В ПАКЕТА
-
-### Core Files (Direct Replace):
 ```
-db.py                          → app/db.py
-crud.py                        → app/crud.py
-practice.py                    → app/routers/practice.py
-home.html                      → app/templates/home.html
-admin_index.html               → app/templates/admin/index.html
-```
-
-### New Templates:
-```
-phrases.html                   → app/templates/practice/phrases.html
-phrases_admin.html             → app/templates/admin/phrases.html
-edit_noun.html                 → app/templates/admin/edit_noun.html
-edit_verb.html                 → app/templates/admin/edit_verb.html
-edit_adjective.html            → app/templates/admin/edit_adjective.html
-edit_phrase.html               → app/templates/admin/edit_phrase.html
-```
-
-### Code Snippets (for manual updates):
-```
-admin_edit_routes.py           - Edit routes за admin.py
-admin_phrases_routes.py        - Phrases routes за admin.py
-COMPLETE_IMPORT_FUNCTIONS.py  - Обновени import функции
+norsk-drill/
+├── app/
+│   ├── db.py          # SQLAlchemy models (Noun, Verb, Adjective, Phrase, QuestionWord)
+│   ├── crud.py        # Database queries and answer checking
+│   ├── settings.py    # Config (DATABASE_URL etc.)
+│   ├── routers/
+│   │   ├── practice.py  # Practice endpoints for all categories
+│   │   └── admin.py     # Admin CRUD endpoints
+│   └── templates/
+│       ├── home.html
+│       ├── search.html
+│       ├── practice/    # One template per category
+│       └── admin/       # Admin pages + edit forms
+├── main.py            # FastAPI app + router registration
+├── data/
+│   └── norsk_drill.db # SQLite database
+└── static/            # Static assets
 ```
 
----
+## How it works
 
-## ⚡ QUICK START (Fast Deploy)
-
-### 1. Backup
-```bash
-cd ~/Documents
-cp -r norsk-drill norsk-drill-backup-$(date +%Y%m%d)
-```
-
-### 2. Copy Files
-```bash
-cd ~/Documents/norsk-drill
-
-# Core files
-cp db.py app/db.py
-cp crud.py app/crud.py
-cp practice.py app/routers/practice.py
-cp home.html app/templates/home.html
-cp admin_index.html app/templates/admin/index.html
-
-# Templates
-cp phrases.html app/templates/practice/
-cp phrases_admin.html app/templates/admin/phrases.html
-cp edit_*.html app/templates/admin/
-```
-
-### 3. Update admin.py
-```bash
-# Manual edit required!
-# See admin_py_changes.md for details
-nano app/routers/admin.py
-```
-
-### 4. Add Edit Buttons
-```bash
-# Manual edit required!
-# Edit these files:
-# - app/templates/admin/nouns.html
-# - app/templates/admin/verbs.html
-# - app/templates/admin/adjectives.html
-```
-
-### 5. Deploy
-```bash
-git add .
-git commit -m "Major update v2.0"
-git push
-
-# On Pi:
-sudo systemctl stop norsk-drill && git pull && sudo systemctl start norsk-drill
-```
-
----
-
-## 🎯 КАКВО Е НОВО?
-
-### 1. Validation Fix
-**Преди:** Празни полета → ✅ Correct  
-**След:** Празни полета → ❌ Incorrect  
-
-### 2. Parentheses Ignore
-**Преди:** "време" ≠ "време (навън)"  
-**След:** "време" = "време (навън)" ✅  
-
-### 3. Duplicate Checking
-**Преди:** CSV import 2x → 2x думи в база  
-**След:** CSV import 2x → 1x думи (skip duplicates)  
-
-### 4. Edit Functionality
-**Ново:** ✏️ Edit бутон до всяка дума в Admin  
-- Промяна на форми
-- Поправяне на преводи
-- Обновяване на групи
-
-### 5. Phrases (NEW!)
-**Ново:** 🗣️ Phrases категория  
-- Фрази и изрази
-- Category organization
-- Notes field
-- Practice като други категории
-
----
-
-## 🗄️ DATABASE CHANGES
-
-**Нови колони:**
-- `verbs.group`
-- `verbs.group_description`
-- `adjectives.group`
-- `adjectives.group_description`
-
-**Нова таблица:**
-- `phrases` (norwegian, translations, category, notes)
-
-**Миграция:** Автоматична при първо стартиране!
-
----
-
-## ✅ TESTING CHECKLIST
-
-След deploy, тествай:
-
-- [ ] Practice Verbs - празни полета = грешно
-- [ ] Translation с "(текст)" - работи без скобите
-- [ ] Import същ CSV 2x - само 1x в база
-- [ ] Edit бутон в Admin - работи
-- [ ] Phrases практика - показва се
-- [ ] Phrases admin - работи import/edit/delete
-
----
-
-## 📞 SUPPORT FILES
-
-- `DEPLOYMENT_GUIDE.md` - Пълен deployment guide
-- `FILE_MAPPING.md` - File-by-file mapping
-- `admin_py_changes.md` - Admin.py промени
-- `COMPLETE_IMPORT_FUNCTIONS.py` - Import функции reference
-
----
-
-## 🎉 РЕЗУЛТАТ
-
-След deploy ще имаш:
-
-✨ **По-строга валидация**  
-✨ **По-smart проверка на преводи**  
-✨ **Защита от дубликати**  
-✨ **Пълен контрол с Edit**  
-✨ **Нова Phrases категория**  
-
----
-
-## 📈 VERSION INFO
-
-**Version:** 2.0  
-**Release Date:** 2025-12-17  
-**Files Changed:** 16  
-**New Features:** 5  
-**Breaking Changes:** None (backward compatible)  
-
----
-
-## ⚠️ ВАЖНИ ЗАБЕЛЕЖКИ
-
-1. **Backup преди deploy!**
-2. **Database ще се обнови автоматично**
-3. **Съществуващи данни ще останат**
-4. **Ръчно редактиране на admin.py е задължително**
-5. **Тествай локално преди Pi deploy**
-
----
-
-## 🚀 READY?
-
-**Следвай DEPLOYMENT_GUIDE.md за стъпка-по-стъпка инструкции!**
-
-**Успех с deploy-а!** 💪
-
----
-
-**Made with ❤️ for Norwegian language learning** 🇳🇴
+1. **Adding words** — go to Admin, pick a category, add words one by one or paste a list. Each import batch gets assigned a level (A / B1.x / B2.x).
+2. **Practicing** — select a level on the home page (saved in localStorage), pick a category. The app fetches a random unseen word from that level, you type the answer, press Enter or ✓. After finishing all words in a session you see your score.
+3. **Answer matching** — both the stored translation and your input are lowercased and stripped of trailing punctuation before comparison. Multiple accepted translations are separated by commas.
+4. **Database migration** — new columns (`level`, `group`, `group_description`) are added automatically on startup via `ALTER TABLE` if they don't exist, so existing databases are upgraded without data loss.
