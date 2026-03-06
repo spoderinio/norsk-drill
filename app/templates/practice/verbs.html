@@ -137,9 +137,10 @@ async function checkAnswer(){
   });
   const box=document.getElementById('result-box'); box.classList.remove('hidden');
   const trans=(data.translations||[]).join(', ');
+  const forms=`<span style="font-size:1.05em">${data.presens||'—'}</span> · <span style="font-size:1.05em">${data.preteritum||'—'}</span> · <span style="font-size:1.05em">har ${data.perfect||'—'}</span>`;
   document.getElementById('result-content').innerHTML=allCorrect
-    ?`<div class="result-global result-correct"><div style="font-size:.75em;text-transform:uppercase">✅ Riktig!</div>${trans}</div>`
-    :`<div class="result-global result-wrong"><div style="font-size:.75em;text-transform:uppercase">❌ Riktig:</div><b>${data.presens||'—'}</b> · <b>${data.preteritum||'—'}</b> · <b>${data.perfect||'—'}</b><br><span style="font-size:.85em">${trans}</span></div>`;
+    ?`<div class="result-global result-correct"><div style="font-size:.75em;text-transform:uppercase;margin-bottom:6px">✅ Riktig!</div><div>${forms}</div><div style="font-size:.85em;color:#aaa;margin-top:4px">${trans}</div></div>`
+    :`<div class="result-global result-wrong"><div style="font-size:.75em;text-transform:uppercase;margin-bottom:6px">❌ Riktig svar:</div><div>${forms}</div><div style="font-size:.85em;color:#aaa;margin-top:4px">${trans}</div></div>`;
 }
 
 function skipWord(){
@@ -147,8 +148,13 @@ function skipWord(){
   wrong++; document.getElementById('stat-wrong').textContent=wrong;
   document.getElementById('result-box').classList.remove('hidden');
   const trans=(currentItem.translations||[]).join(', ');
+  const myPresens=document.getElementById('inp-presens').value.trim();
+  const myPreteritum=document.getElementById('inp-preteritum').value.trim();
+  const myPerfect=document.getElementById('inp-perfect').value.trim();
+  const correctForms=`<span style="font-size:1.05em">${currentItem.presens||'—'}</span> · <span style="font-size:1.05em">${currentItem.preteritum||'—'}</span> · <span style="font-size:1.05em">har ${currentItem.perfect||'—'}</span>`;
+  const myForms=`<span style="font-size:.85em;color:#888">Du skrev: ${myPresens||'—'} · ${myPreteritum||'—'} · ${myPerfect||'—'}</span>`;
   document.getElementById('result-content').innerHTML=
-    `<div class="result-global result-wrong"><div style="font-size:.75em;text-transform:uppercase">⏭ Svar:</div><b>${currentItem.presens||'—'}</b> · <b>${currentItem.preteritum||'—'}</b> · <b>${currentItem.perfect||'—'}</b><br><span style="font-size:.85em">${trans}</span></div>`;
+    `<div class="result-global result-wrong"><div style="font-size:.75em;text-transform:uppercase;margin-bottom:6px">⏭ Riktig svar:</div><div>${correctForms}</div><div style="margin-top:4px">${myForms}</div><div style="font-size:.85em;color:#aaa;margin-top:4px">${trans}</div></div>`;
   ['inp-presens','inp-preteritum','inp-perfect'].forEach(id=>document.getElementById(id).disabled=true);
 }
 
