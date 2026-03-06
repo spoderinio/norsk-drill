@@ -12,7 +12,9 @@ LEVELS = ["A", "B1.1", "B1.2", "B2.1", "B2.2"]
 
 def _normalize(s: str) -> str:
     import re
-    return re.sub(r"\s*\(.*?\)\s*", "", s or "").strip().lower()
+    s = re.sub(r"\s*\(.*?\)\s*", "", s or "")
+    s = re.sub(r"[.!?,;:]+$", "", s.strip())
+    return s.strip().lower()
 
 
 # ── NOUNS ────────────────────────────────────────────────────────────────────
