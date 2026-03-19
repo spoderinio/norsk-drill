@@ -10,45 +10,42 @@
 body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;min-height:100vh;}
 .nav{background:var(--card);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;}
 .nav-title{font-weight:700;color:var(--accent);font-size:1.05em;}
+.nav-right{display:flex;align-items:center;gap:12px;}
 .nav-links a{color:var(--muted);text-decoration:none;margin-left:14px;font-size:.9em;}
-.nav-links a:hover{color:var(--text);}
+.mode-badge{font-size:.78em;padding:3px 10px;border-radius:10px;font-weight:600;}
+.mode-badge.no{background:#1a2a4a;color:var(--accent);}
+.mode-badge.bg{background:#2a1608;color:#e67e22;}
 .container{max-width:600px;margin:0 auto;padding:20px 16px;}
-
-/* Level filter */
-.level-bar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;}
-.level-bar span{font-size:.78em;color:var(--muted);align-self:center;margin-right:4px;}
+.level-bar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 14px;align-items:center;}
+.level-bar span{font-size:.78em;color:var(--muted);margin-right:4px;}
 .lvl-btn{padding:5px 12px;border-radius:14px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-size:.82em;transition:all .2s;}
 .lvl-btn:hover{border-color:var(--accent);color:var(--accent);}
 .lvl-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;}
-
-.stats-row{display:flex;justify-content:center;gap:28px;margin-bottom:16px;}
-.stat{text-align:center;}
-.stat-val{font-size:1.3em;font-weight:700;}
-.stat-val.green{color:var(--green);}
-.stat-val.red{color:var(--red);}
+.stats-row{display:flex;justify-content:center;gap:28px;margin-bottom:14px;}
+.stat{text-align:center;} .stat-val{font-size:1.3em;font-weight:700;}
+.stat-val.green{color:var(--green);} .stat-val.red{color:var(--red);}
 .stat-label{font-size:.72em;color:var(--muted);}
-
 .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;text-align:center;}
 .card-label{font-size:.72em;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;}
-.word-display{font-size:2.4em;font-weight:700;color:var(--text);margin-bottom:6px;}
+.word-display{font-size:2.4em;font-weight:700;margin-bottom:6px;line-height:1.2;}
+.word-no{color:var(--text);} .word-bg{color:#f0d080;}
 .tts-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1em;margin-bottom:18px;}
-.tts-btn:hover{color:var(--text);}
-.level-pill{font-size:.72em;background:#1a2a4a;color:var(--accent);padding:2px 10px;border-radius:10px;display:inline-block;margin-bottom:14px;}
-.input-row{display:flex;gap:8px;margin-bottom:12px;}
+.hint{font-size:.82em;color:var(--muted);margin-bottom:12px;font-style:italic;}
+.level-pill{font-size:.72em;background:#1a2a4a;color:var(--accent);padding:2px 10px;border-radius:10px;display:inline-block;margin-bottom:12px;}
+.input-row{display:flex;gap:8px;margin-bottom:10px;}
 .input-row input{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:11px 14px;color:var(--text);font-size:1em;}
 .input-row input:focus{outline:none;border-color:var(--accent);}
-.btn{padding:11px 18px;border-radius:8px;border:none;cursor:pointer;font-size:.9em;font-weight:600;}
+.btn{padding:10px 18px;border-radius:8px;border:none;cursor:pointer;font-size:.9em;font-weight:600;}
 .btn-check{background:var(--accent);color:#fff;}
-.btn-check:hover{opacity:.9;}
-.btn-skip{background:var(--border);color:var(--muted);margin-top:2px;}
-.btn-skip:hover{color:var(--text);}
+.btn-skip{background:var(--border);color:var(--muted);margin-top:2px;width:100%;}
 .btn-next{background:var(--accent);color:#fff;width:100%;margin-top:10px;}
 .result-box{border-radius:9px;padding:14px;margin-bottom:10px;text-align:left;}
 .result-correct{background:#1a3a1a;border:1px solid var(--green);color:var(--green);}
 .result-wrong{background:#3a1a1a;border:1px solid var(--red);color:var(--red);}
-.result-label{font-size:.75em;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;}
-.result-value{font-size:1.05em;font-weight:600;}
-.result-trans{font-size:.82em;color:var(--muted);margin-top:4px;}
+.result-label{font-size:.75em;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;}
+.result-main{font-size:1.15em;font-weight:700;color:var(--text);margin-bottom:3px;}
+.result-sub{font-size:.85em;color:#aaa;}
+.result-yours{font-size:.82em;color:#777;margin-top:4px;}
 .done-screen{text-align:center;padding:40px 20px;}
 .done-screen h2{font-size:1.8em;margin-bottom:10px;}
 .done-screen p{color:var(--muted);margin-bottom:20px;}
@@ -58,14 +55,12 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;mi
 <body>
 <nav class="nav">
   <span class="nav-title">📖 Substantiv</span>
-  <div class="nav-links">
-    <a href="/">🏠 Hjem</a>
-    <a href="/admin/nouns">⚙️ Admin</a>
+  <div class="nav-right">
+    <span class="mode-badge no" id="mode-badge">NO → BG</span>
+    <div class="nav-links"><a href="/">🏠</a><a href="/admin/nouns">⚙️</a></div>
   </div>
 </nav>
-
 <div class="container">
-  <!-- Level filter -->
   <div class="level-bar">
     <span>Nivå:</span>
     <button class="lvl-btn {% if selected_level=='all' %}active{% endif %}" data-level="all" onclick="changeLevel('all',this)">Alle</button>
@@ -73,28 +68,26 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;mi
     <button class="lvl-btn {% if selected_level==lvl %}active{% endif %}" data-level="{{ lvl }}" onclick="changeLevel('{{ lvl }}',this)">{{ lvl }}</button>
     {% endfor %}
   </div>
-
   <div class="stats-row">
     <div class="stat"><div class="stat-val green" id="stat-correct">0</div><div class="stat-label">✅ Riktig</div></div>
     <div class="stat"><div class="stat-val red" id="stat-wrong">0</div><div class="stat-label">❌ Feil</div></div>
   </div>
-
   <div class="card" id="practice-card">
-    <div class="card-label">📖 Hva betyr dette på bulgarsk?</div>
-    <div class="word-display" id="word-display">—</div>
-    <button class="tts-btn" onclick="speak()" title="Lytt">🔊</button>
+    <div class="card-label" id="card-label">📖 Hva betyr dette på bulgarsk?</div>
+    <div class="word-display word-no" id="word-display">—</div>
+    <div><button class="tts-btn" id="tts-btn" onclick="speak()">🔊</button></div>
     <div class="level-pill hidden" id="level-pill"></div>
+    <div class="hint hidden" id="hint"></div>
     <div class="input-row">
-      <input type="text" id="answer-input" placeholder="Oversettelse..." autocomplete="off" autocorrect="off"/>
+      <input type="text" id="answer-input" placeholder="Oversettelse..." autocomplete="off" autocorrect="off" spellcheck="false"/>
       <button class="btn btn-check" onclick="checkAnswer()">✓</button>
     </div>
     <button class="btn btn-skip" onclick="skipWord()">⏭ Hopp over</button>
-    <div id="result-box" class="hidden">
+    <div id="result-area" class="hidden">
       <div id="result-content"></div>
       <button class="btn btn-next" onclick="loadNext()">Neste →</button>
     </div>
   </div>
-
   <div class="done-screen hidden" id="done-screen">
     <h2>🎉 Ferdig!</h2>
     <p id="done-stats"></p>
@@ -102,109 +95,135 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;mi
     <a href="/" style="display:block;text-align:center;margin-top:12px;color:var(--muted);">← Tilbake</a>
   </div>
 </div>
-
 <script>
-let seenIds = [], currentItem = null, correct = 0, wrong = 0;
-let currentLevel = '{{ selected_level }}';
+let seenIds=[], currentItem=null, correct=0, wrong=0;
+let currentLevel='{{ selected_level }}';
+const reverseMode = (localStorage.getItem('drill_mode') || 'no') === 'bg';
 
-function changeLevel(level, btn) {
-  currentLevel = level;
-  localStorage.setItem('drill_level', level);
-  document.querySelectorAll('.lvl-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  resetSession();
+// Show mode badge
+const badge = document.getElementById('mode-badge');
+if (reverseMode) { badge.textContent='BG → NO'; badge.className='mode-badge bg'; }
+
+function changeLevel(level,btn){
+  currentLevel=level; localStorage.setItem('drill_level',level);
+  document.querySelectorAll('.lvl-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); resetSession();
 }
 
-async function loadNext() {
-  document.getElementById('result-box').classList.add('hidden');
-  document.getElementById('answer-input').value = '';
-  document.getElementById('answer-input').disabled = false;
-  document.getElementById('answer-input').style.borderColor = '';
-  const resp = await fetch('/practice/nouns/next', {
-    method: 'POST', headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({seen_ids: seenIds, level: currentLevel})
-  });
-  const data = await resp.json();
-  if (data.done) { showDone(); return; }
-  currentItem = data;
-  seenIds.push(data.id);
-  document.getElementById('word-display').textContent = data.article + ' ' + data.word;
-  const pill = document.getElementById('level-pill');
-  pill.textContent = 'Nivå ' + data.level;
-  pill.classList.remove('hidden');
+async function loadNext(){
+  document.getElementById('result-area').classList.add('hidden');
+  document.getElementById('answer-input').value='';
+  document.getElementById('answer-input').disabled=false;
+  document.getElementById('hint').classList.add('hidden');
+  const resp=await fetch('/practice/nouns/next',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({seen_ids:seenIds,level:currentLevel})});
+  const data=await resp.json();
+  if(data.done){showDone();return;}
+  currentItem=data; seenIds.push(data.id);
+  document.getElementById('level-pill').textContent='Nivå '+data.level;
+  document.getElementById('level-pill').classList.remove('hidden');
+  const wd=document.getElementById('word-display');
+  if(reverseMode){
+    wd.textContent=(data.translations||[]).join(' / ');
+    wd.className='word-display word-bg';
+    document.getElementById('card-label').textContent='📖 Напиши на норвежки:';
+    document.getElementById('answer-input').placeholder='en/ei/et + дума...';
+    document.getElementById('tts-btn').classList.add('hidden');
+    const h=document.getElementById('hint');
+    h.textContent='Hint: '+data.article+' ___';
+    h.classList.remove('hidden');
+  } else {
+    wd.textContent=data.article+' '+data.word;
+    wd.className='word-display word-no';
+    document.getElementById('card-label').textContent='📖 Hva betyr dette på bulgarsk?';
+    document.getElementById('answer-input').placeholder='Oversettelse...';
+    document.getElementById('tts-btn').classList.remove('hidden');
+  }
   document.getElementById('answer-input').focus();
 }
 
-async function checkAnswer() {
-  if (!currentItem) return;
-  const answer = document.getElementById('answer-input').value.trim();
-  const resp = await fetch('/practice/nouns/check', {
-    method: 'POST', headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({id: currentItem.id, answer})
-  });
-  const data = await resp.json();
-  showResult(data.correct, data.translations);
-}
-
-function showResult(isCorrect, translations) {
-  if (isCorrect) correct++; else wrong++;
-  document.getElementById('stat-correct').textContent = correct;
-  document.getElementById('stat-wrong').textContent = wrong;
-  const box = document.getElementById('result-box');
-  box.classList.remove('hidden');
-  const trans = (translations || []).join(', ');
-  if (isCorrect) {
-    document.getElementById('result-content').innerHTML =
-      `<div class="result-box result-correct"><div class="result-label">✅ Riktig!</div><div class="result-trans">${trans}</div></div>`;
+async function checkAnswer(){
+  if(!currentItem)return;
+  const answer=document.getElementById('answer-input').value.trim();
+  if(reverseMode){
+    const ua=answer.toLowerCase().replace(/[.!?,;:]+$/,'').trim();
+    const correctFull=(currentItem.article+' '+currentItem.word).toLowerCase();
+    const correctWord=currentItem.word.toLowerCase();
+    showResultReverse(ua===correctFull||ua===correctWord, answer);
   } else {
-    document.getElementById('result-content').innerHTML =
-      `<div class="result-box result-wrong"><div class="result-label">❌ Feil – riktig svar:</div><div class="result-value">${trans}</div></div>`;
+    const resp=await fetch('/practice/nouns/check',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:currentItem.id,answer})});
+    const data=await resp.json();
+    showResultNormal(data.correct,data.translations,answer);
   }
-  document.getElementById('answer-input').disabled = true;
 }
 
-function skipWord() {
-  if (!currentItem) return;
-  wrong++;
-  document.getElementById('stat-wrong').textContent = wrong;
-  const trans = (currentItem.translations || []).join(', ');
-  const box = document.getElementById('result-box');
-  box.classList.remove('hidden');
-  document.getElementById('result-content').innerHTML =
-    `<div class="result-box result-wrong"><div class="result-label">⏭ Hoppet over</div><div class="result-value">${trans}</div></div>`;
-  document.getElementById('answer-input').disabled = true;
+function showResultNormal(isCorrect,translations,userAns){
+  if(isCorrect)correct++;else wrong++;
+  document.getElementById('stat-correct').textContent=correct;
+  document.getElementById('stat-wrong').textContent=wrong;
+  const trans=(translations||[]).join(', ');
+  document.getElementById('result-content').innerHTML=isCorrect
+    ?`<div class="result-box result-correct"><div class="result-label">✅ Riktig!</div><div class="result-sub">${trans}</div></div>`
+    :`<div class="result-box result-wrong"><div class="result-label">❌ Riktig svar:</div><div class="result-main">${trans}</div><div class="result-yours">Du skrev: ${userAns||'—'}</div></div>`;
+  document.getElementById('result-area').classList.remove('hidden');
+  document.getElementById('answer-input').disabled=true;
 }
 
-function showDone() {
+function showResultReverse(isCorrect,userAns){
+  if(isCorrect)correct++;else wrong++;
+  document.getElementById('stat-correct').textContent=correct;
+  document.getElementById('stat-wrong').textContent=wrong;
+  const correctFull=currentItem.article+' '+currentItem.word;
+  document.getElementById('result-content').innerHTML=isCorrect
+    ?`<div class="result-box result-correct"><div class="result-label">✅ Riktig!</div><div class="result-main">${correctFull}</div></div>`
+    :`<div class="result-box result-wrong"><div class="result-label">❌ Riktig svar:</div><div class="result-main">${correctFull}</div><div class="result-yours">Du skrev: ${userAns||'—'}</div></div>`;
+  document.getElementById('result-area').classList.remove('hidden');
+  document.getElementById('answer-input').disabled=true;
+}
+
+function skipWord(){
+  if(!currentItem)return;
+  wrong++; document.getElementById('stat-wrong').textContent=wrong;
+  const userAns=document.getElementById('answer-input').value.trim();
+  const correctFull=currentItem.article+' '+currentItem.word;
+  const trans=(currentItem.translations||[]).join(', ');
+  document.getElementById('result-content').innerHTML=
+    `<div class="result-box result-wrong"><div class="result-label">⏭ Riktig svar:</div><div class="result-main">${reverseMode?correctFull:trans}</div><div class="result-yours">Du skrev: ${userAns||'—'}</div></div>`;
+  document.getElementById('result-area').classList.remove('hidden');
+  document.getElementById('answer-input').disabled=true;
+}
+
+function showDone(){
   document.getElementById('practice-card').classList.add('hidden');
   document.getElementById('done-screen').classList.remove('hidden');
-  const total = correct + wrong;
-  const pct = total > 0 ? Math.round(correct/total*100) : 0;
-  document.getElementById('done-stats').textContent = `${correct} riktige av ${total} forsøk (${pct}%)`;
+  const total=correct+wrong,pct=total>0?Math.round(correct/total*100):0;
+  document.getElementById('done-stats').textContent=`${correct} riktige av ${total} forsøk (${pct}%)`;
 }
 
-function resetSession() {
-  seenIds = []; currentItem = null; correct = 0; wrong = 0;
-  document.getElementById('stat-correct').textContent = 0;
-  document.getElementById('stat-wrong').textContent = 0;
+function resetSession(){
+  seenIds=[];currentItem=null;correct=0;wrong=0;
+  document.getElementById('stat-correct').textContent=0;
+  document.getElementById('stat-wrong').textContent=0;
   document.getElementById('done-screen').classList.add('hidden');
   document.getElementById('practice-card').classList.remove('hidden');
   loadNext();
 }
 
-function speak() {
-  if (!currentItem || !window.speechSynthesis) return;
-  const u = new SpeechSynthesisUtterance(currentItem.article + ' ' + currentItem.word);
-  u.lang = 'nb-NO'; window.speechSynthesis.speak(u);
+function speak(){
+  if(!currentItem||!window.speechSynthesis||reverseMode)return;
+  const u=new SpeechSynthesisUtterance(currentItem.article+' '+currentItem.word);
+  u.lang='nb-NO'; window.speechSynthesis.speak(u);
 }
 
-document.getElementById('answer-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') {
-    if (!document.getElementById('result-box').classList.contains('hidden')) loadNext();
+document.getElementById('answer-input').addEventListener('keydown',e=>{
+  if(e.key==='Enter'){
+    if(!document.getElementById('result-area').classList.contains('hidden'))loadNext();
     else checkAnswer();
   }
 });
 
+const saved=localStorage.getItem('drill_level')||'all';
+const savedBtn=document.querySelector(`.lvl-btn[data-level="${saved}"]`);
+if(savedBtn){currentLevel=saved;document.querySelectorAll('.lvl-btn').forEach(b=>b.classList.remove('active'));savedBtn.classList.add('active');}
 loadNext();
 </script>
 </body>

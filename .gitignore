@@ -36,3 +36,5 @@ Thumbs.db
 *.backup
 *.backup_*
 data/*.db.backup*
+app_backup_20251214/
+{app/

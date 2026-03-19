@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Norsk Drill</title>
 <style>
-:root{--bg:#0f1117;--card:#1a1d27;--border:#2a2d3e;--accent:#4f8ef7;--green:#2ecc71;--red:#e74c3c;--text:#e0e0e0;--muted:#666;--level-badge:#2a3a5c;}
+:root{--bg:#0f1117;--card:#1a1d27;--border:#2a2d3e;--accent:#4f8ef7;--green:#2ecc71;--red:#e74c3c;--text:#e0e0e0;--muted:#666;}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;min-height:100vh;}
 .nav{background:var(--card);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
@@ -14,17 +14,19 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;mi
 .nav-links a:hover{color:var(--text);}
 .container{max-width:900px;margin:0 auto;padding:30px 20px;}
 h1{font-size:2em;margin-bottom:8px;}
-.subtitle{color:var(--muted);margin-bottom:30px;}
-
-/* Level selector */
-.level-selector{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:30px;}
-.level-selector h3{margin-bottom:12px;font-size:1em;color:var(--muted);}
+.subtitle{color:var(--muted);margin-bottom:24px;}
+.settings-row{display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;}
+.setting-box{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;flex:1;min-width:200px;}
+.setting-box h3{font-size:.82em;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em;}
 .level-btns{display:flex;flex-wrap:wrap;gap:8px;}
 .level-btn{padding:7px 16px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;font-size:.9em;transition:all .2s;}
 .level-btn:hover{border-color:var(--accent);color:var(--accent);}
 .level-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
-
-/* Category cards */
+.mode-btns{display:flex;gap:8px;}
+.mode-btn{flex:1;padding:9px 16px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-size:.9em;transition:all .2s;text-align:center;}
+.mode-btn:hover{border-color:var(--accent);color:var(--text);}
+.mode-btn.active-no{background:var(--accent);border-color:var(--accent);color:#fff;}
+.mode-btn.active-bg{background:#e67e22;border-color:#e67e22;color:#fff;}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;}
 .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;text-decoration:none;color:var(--text);transition:all .2s;display:block;}
 .card:hover{border-color:var(--accent);transform:translateY(-2px);}
@@ -33,11 +35,12 @@ h1{font-size:2em;margin-bottom:8px;}
 .card-icon{font-size:2em;margin-bottom:10px;}
 .card-title{font-size:1.1em;font-weight:600;margin-bottom:4px;}
 .card-count{color:var(--muted);font-size:.85em;}
-.card-level-hint{font-size:.75em;color:var(--accent);margin-top:6px;}
-
+.card-hint{font-size:.75em;margin-top:6px;}
+.hint-no{color:var(--accent);}
+.hint-bg{color:#e67e22;}
+.hint-special{color:#b07edb;}
 .admin-link{text-align:center;margin-top:30px;}
 .admin-link a{color:var(--muted);font-size:.85em;text-decoration:none;}
-.admin-link a:hover{color:var(--text);}
 </style>
 </head>
 <body>
@@ -48,80 +51,108 @@ h1{font-size:2em;margin-bottom:8px;}
     <a href="/admin/">⚙️ Admin</a>
   </div>
 </nav>
-
 <div class="container">
   <h1>Norsk Drill</h1>
-  <p class="subtitle">Velg kategori og nivå for å øve.</p>
+  <p class="subtitle">Velg innstillinger og kategori.</p>
 
-  <!-- Level Selector -->
-  <div class="level-selector">
-    <h3>📊 Nivå å øve:</h3>
-    <div class="level-btns">
-      <button class="level-btn active" data-level="all" onclick="setLevel('all', this)">Alle nivåer</button>
-      {% for lvl in levels %}
-      <button class="level-btn" data-level="{{ lvl }}" onclick="setLevel('{{ lvl }}', this)">{{ lvl }}</button>
-      {% endfor %}
+  <div class="settings-row">
+    <div class="setting-box">
+      <h3>📊 Nivå</h3>
+      <div class="level-btns">
+        <button class="level-btn" data-level="all" onclick="setLevel('all',this)">Alle</button>
+        {% for lvl in levels %}
+        <button class="level-btn" data-level="{{ lvl }}" onclick="setLevel('{{ lvl }}',this)">{{ lvl }}</button>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="setting-box">
+      <h3>🔄 Retning</h3>
+      <div class="mode-btns">
+        <button class="mode-btn" id="btn-no" onclick="setMode('no')">🇳🇴 NO → BG</button>
+        <button class="mode-btn" id="btn-bg" onclick="setMode('bg')">🇧🇬 BG → NO</button>
+      </div>
     </div>
   </div>
 
-  <!-- Category cards -->
   <div class="grid">
     <a class="card" id="link-nouns" href="/practice/nouns?level=all">
       <div class="card-icon">📖</div>
-      <div class="card-title">Substantiv (Nouns)</div>
+      <div class="card-title">Substantiv</div>
       <div class="card-count">{{ noun_count }} ord</div>
-      <div class="card-level-hint" id="hint-nouns">Alle nivåer</div>
+      <div class="card-hint hint-no" id="hint-nouns">NO → BG</div>
     </a>
     <a class="card" id="link-verbs" href="/practice/verbs?level=all">
       <div class="card-icon">⚡</div>
-      <div class="card-title">Verb (Verbs)</div>
+      <div class="card-title">Verb</div>
       <div class="card-count">{{ verb_count }} verb</div>
-      <div class="card-level-hint" id="hint-verbs">Alle nivåer</div>
+      <div class="card-hint hint-no" id="hint-verbs">NO → BG</div>
     </a>
     <a class="card" id="link-adjectives" href="/practice/adjectives?level=all">
       <div class="card-icon">🎨</div>
-      <div class="card-title">Adjektiv (Adjectives)</div>
+      <div class="card-title">Adjektiv</div>
       <div class="card-count">{{ adj_count }} adjektiv</div>
-      <div class="card-level-hint" id="hint-adjectives">Alle nivåer</div>
+      <div class="card-hint hint-no" id="hint-adjectives">NO → BG</div>
     </a>
     <a class="card" id="link-phrases" href="/practice/phrases?level=all">
       <div class="card-icon">🗣️</div>
-      <div class="card-title">Fraser (Phrases)</div>
+      <div class="card-title">Fraser</div>
       <div class="card-count">{{ phrase_count }} fraser</div>
-      <div class="card-level-hint" id="hint-phrases">Alle nivåer</div>
+      <div class="card-hint hint-no" id="hint-phrases">NO → BG</div>
     </a>
-    <a class="card special" href="/practice/question-words">
+    <a class="card special" id="link-qw" href="/practice/question-words">
       <div class="card-icon">❓</div>
       <div class="card-title">Spørreord</div>
       <div class="card-count">{{ qw_count }} spørreord</div>
-      <div class="card-level-hint" style="color:#b07edb;">hvem · hva · hvor · når · hvorfor...</div>
+      <div class="card-hint hint-special" id="hint-qw">hvem · hva · hvor · når · hvorfor...</div>
     </a>
   </div>
-
   <div class="admin-link"><a href="/admin/">⚙️ Admin-panel</a></div>
 </div>
 
 <script>
 let currentLevel = localStorage.getItem('drill_level') || 'all';
+let currentMode = localStorage.getItem('drill_mode') || 'no';
 
 function setLevel(level, btn) {
   currentLevel = level;
   localStorage.setItem('drill_level', level);
   document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  const cats = ['nouns','verbs','adjectives','phrases'];
-  const label = level === 'all' ? 'Alle nivåer' : 'Nivå ' + level;
-  cats.forEach(cat => {
-    document.getElementById('link-' + cat).href = '/practice/' + cat + '?level=' + level;
-    document.getElementById('hint-' + cat).textContent = label;
+  updateLinks();
+}
+
+function setMode(mode) {
+  currentMode = mode;
+  localStorage.setItem('drill_mode', mode);
+  updateModeUI();
+  updateLinks();
+}
+
+function updateModeUI() {
+  document.getElementById('btn-no').className = 'mode-btn' + (currentMode==='no'?' active-no':'');
+  document.getElementById('btn-bg').className = 'mode-btn' + (currentMode==='bg'?' active-bg':'');
+  const isReverse = currentMode === 'bg';
+  ['nouns','verbs','adjectives','phrases'].forEach(cat => {
+    const h = document.getElementById('hint-' + cat);
+    h.textContent = isReverse ? 'BG → NO' : 'NO → BG';
+    h.className = 'card-hint ' + (isReverse ? 'hint-bg' : 'hint-no');
+  });
+  const hqw = document.getElementById('hint-qw');
+  hqw.textContent = isReverse ? 'BG → NO' : 'hvem · hva · hvor · når · hvorfor...';
+  hqw.className = 'card-hint ' + (isReverse ? 'hint-bg' : 'hint-special');
+}
+
+function updateLinks() {
+  ['nouns','verbs','adjectives','phrases'].forEach(cat => {
+    document.getElementById('link-' + cat).href = `/practice/${cat}?level=${currentLevel}`;
   });
 }
 
-// Restore saved level
 window.addEventListener('DOMContentLoaded', () => {
-  const saved = localStorage.getItem('drill_level') || 'all';
-  const btn = document.querySelector(`.level-btn[data-level="${saved}"]`);
-  if (btn) setLevel(saved, btn);
+  const lvlBtn = document.querySelector(`.level-btn[data-level="${currentLevel}"]`);
+  if (lvlBtn) { document.querySelectorAll('.level-btn').forEach(b=>b.classList.remove('active')); lvlBtn.classList.add('active'); }
+  updateModeUI();
+  updateLinks();
 });
 </script>
 </body>

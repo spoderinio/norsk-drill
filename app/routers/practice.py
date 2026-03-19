@@ -251,7 +251,11 @@ async def check_question_word(request: Request, db: AsyncSession = Depends(get_d
     qw = await crud.get_question_word(db, data["id"])
     if not qw:
         return JSONResponse({"error": True})
-    correct = await crud.check_question_word_answer(qw, data.get("answer", ""))
+    reverse = data.get("reverse", False)
+    if reverse:
+        correct = crud._normalize(data.get("answer", "")) == crud._normalize(qw.norwegian or "")
+    else:
+        correct = await crud.check_question_word_answer(qw, data.get("answer", ""))
     return JSONResponse({
         "correct": correct,
         "norwegian": qw.norwegian,
