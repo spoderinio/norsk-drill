@@ -70,6 +70,23 @@ class QuestionWord(Base):
     example_bg = Column(String(500), nullable=True)
     notes = Column(Text, nullable=True)
 
+class CustomCategory(Base):
+    __tablename__ = "custom_categories"
+    id    = Column(Integer, primary_key=True, index=True)
+    name  = Column(String(200), nullable=False, unique=True)
+    slug  = Column(String(200), nullable=False, unique=True)
+    icon  = Column(String(10),  nullable=False, default="📝")
+    color = Column(String(20),  nullable=False, default="#4f8ef7")
+
+
+class CustomEntry(Base):
+    __tablename__ = "custom_entries"
+    id          = Column(Integer, primary_key=True, index=True)
+    category_id = Column(Integer, nullable=False)
+    norwegian   = Column(String(500), nullable=False, index=True)
+    translations = Column(JSON, nullable=False)
+    level       = Column(String(10), nullable=False, default="A", server_default="A")
+
 
 engine = create_async_engine(settings.DATABASE_URL, echo=False)
 async_session_maker = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
