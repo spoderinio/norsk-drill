@@ -1,74 +1,81 @@
-"""Database models - v3.0"""
-from sqlalchemy import Column, Integer, String, Text, JSON
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy.orm import declarative_base
-from app import settings
+"""Database models - v4.0"""
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy import Column, Integer, String, Text, JSON, DateTime
+from datetime import datetime
+import app.settings as settings
 
-Base = declarative_base()
-
-LEVELS = ["A", "B1.1", "B1.2", "B2.1", "B2.2"]
 DEFAULT_LEVEL = "A"
+LEVELS = ["A", "B1.1", "B1.2", "B2.1", "B2.2"]
+
+
+class Base(DeclarativeBase):
+    pass
 
 
 class Noun(Base):
     __tablename__ = "nouns"
-    id = Column(Integer, primary_key=True, index=True)
-    article = Column(String(3), nullable=False)
-    word = Column(String(200), nullable=False, index=True)
+    id          = Column(Integer, primary_key=True, index=True)
+    article     = Column(String(10), nullable=False)
+    word        = Column(String(200), nullable=False, index=True)
     translations = Column(JSON, nullable=False)
-    definite = Column(String(200), nullable=True)
-    plural = Column(String(200), nullable=True)
-    tags = Column(String(500), nullable=True)
-    group = Column(String(200), nullable=True)
+    definite    = Column(String(200), nullable=True)
+    plural      = Column(String(200), nullable=True)
+    example_no  = Column(String(500), nullable=True)
+    example_bg  = Column(String(500), nullable=True)
+    notes       = Column(Text, nullable=True)
+    tags        = Column(String(500), nullable=True)
+    group       = Column(String(200), nullable=True)
     group_description = Column(String(500), nullable=True)
-    level = Column(String(10), nullable=False, default=DEFAULT_LEVEL, server_default="A")
+    level       = Column(String(10), nullable=False, default=DEFAULT_LEVEL, server_default="A")
 
 
 class Verb(Base):
     __tablename__ = "verbs"
-    id = Column(Integer, primary_key=True, index=True)
-    infinitive = Column(String(200), nullable=False, index=True)
-    presens = Column(String(200), nullable=True)
-    preteritum = Column(String(200), nullable=True)
+    id          = Column(Integer, primary_key=True, index=True)
+    infinitive  = Column(String(200), nullable=False, index=True)
+    present     = Column(String(200), nullable=True)
+    preteritum  = Column(String(200), nullable=True)
     perfect_participle = Column(String(200), nullable=True)
     translations = Column(JSON, nullable=False)
-    tags = Column(String(500), nullable=True)
-    group = Column(String(200), nullable=True)
+    tags        = Column(String(500), nullable=True)
+    group       = Column(String(200), nullable=True)
     group_description = Column(String(500), nullable=True)
-    level = Column(String(10), nullable=False, default=DEFAULT_LEVEL, server_default="A")
+    level       = Column(String(10), nullable=False, default=DEFAULT_LEVEL, server_default="A")
 
 
 class Adjective(Base):
     __tablename__ = "adjectives"
-    id = Column(Integer, primary_key=True, index=True)
-    base = Column(String(200), nullable=False, index=True)
-    neuter = Column(String(200), nullable=True)
-    plural = Column(String(200), nullable=True)
+    id          = Column(Integer, primary_key=True, index=True)
+    base        = Column(String(200), nullable=False, index=True)
+    neuter      = Column(String(200), nullable=True)
+    plural      = Column(String(200), nullable=True)
     translations = Column(JSON, nullable=False)
-    tags = Column(String(500), nullable=True)
-    group = Column(String(200), nullable=True)
+    tags        = Column(String(500), nullable=True)
+    group       = Column(String(200), nullable=True)
     group_description = Column(String(500), nullable=True)
-    level = Column(String(10), nullable=False, default=DEFAULT_LEVEL, server_default="A")
+    level       = Column(String(10), nullable=False, default=DEFAULT_LEVEL, server_default="A")
 
 
 class Phrase(Base):
     __tablename__ = "phrases"
-    id = Column(Integer, primary_key=True, index=True)
-    norwegian = Column(String(500), nullable=False, index=True)
+    id          = Column(Integer, primary_key=True, index=True)
+    norwegian   = Column(String(500), nullable=False, index=True)
     translations = Column(JSON, nullable=False)
-    category = Column(String(200), nullable=True)
-    notes = Column(Text, nullable=True)
-    level = Column(String(10), nullable=False, default=DEFAULT_LEVEL, server_default="A")
+    category    = Column(String(200), nullable=True)
+    notes       = Column(Text, nullable=True)
+    level       = Column(String(10), nullable=False, default=DEFAULT_LEVEL, server_default="A")
 
 
 class QuestionWord(Base):
     __tablename__ = "question_words"
-    id = Column(Integer, primary_key=True, index=True)
-    norwegian = Column(String(200), nullable=False, index=True)
+    id          = Column(Integer, primary_key=True, index=True)
+    norwegian   = Column(String(200), nullable=False, index=True)
     translations = Column(JSON, nullable=False)
-    example_no = Column(String(500), nullable=True)
-    example_bg = Column(String(500), nullable=True)
-    notes = Column(Text, nullable=True)
+    example_no  = Column(String(500), nullable=True)
+    example_bg  = Column(String(500), nullable=True)
+    notes       = Column(Text, nullable=True)
+
 
 class CustomCategory(Base):
     __tablename__ = "custom_categories"
@@ -100,12 +107,25 @@ async def get_db():
 async def init_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-        # Migration: add level column to existing tables if missing
+
+        # Migrations: add columns to existing tables if missing
         from sqlalchemy import text
-        for table in ["nouns", "verbs", "adjectives", "phrases"]:
+        migrations = [
+            # level column
+            ("nouns",       "ALTER TABLE nouns ADD COLUMN level VARCHAR(10) NOT NULL DEFAULT 'A'"),
+            ("verbs",       "ALTER TABLE verbs ADD COLUMN level VARCHAR(10) NOT NULL DEFAULT 'A'"),
+            ("adjectives",  "ALTER TABLE adjectives ADD COLUMN level VARCHAR(10) NOT NULL DEFAULT 'A'"),
+            ("phrases",     "ALTER TABLE phrases ADD COLUMN level VARCHAR(10) NOT NULL DEFAULT 'A'"),
+            # group columns
+            ("nouns",       "ALTER TABLE nouns ADD COLUMN group_description VARCHAR(500)"),
+            ("verbs",       "ALTER TABLE verbs ADD COLUMN group_description VARCHAR(500)"),
+            ("adjectives",  "ALTER TABLE adjectives ADD COLUMN group_description VARCHAR(500)"),
+            # example columns on nouns
+            ("nouns",       "ALTER TABLE nouns ADD COLUMN example_no VARCHAR(500)"),
+            ("nouns",       "ALTER TABLE nouns ADD COLUMN example_bg VARCHAR(500)"),
+        ]
+        for _table, stmt in migrations:
             try:
-                await conn.execute(text(f"ALTER TABLE {table} ADD COLUMN level VARCHAR(10) NOT NULL DEFAULT 'A'"))
+                await conn.execute(text(stmt))
             except Exception:
-                pass  # Column already exists
-        # Migration: add question_words table
-        # Already handled by create_all above
+                pass  # column already exists — safe to ignore
