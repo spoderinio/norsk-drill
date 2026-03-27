@@ -15,6 +15,16 @@ templates = Jinja2Templates(directory="app/templates")
 @router.get("/", response_class=HTMLResponse)
 async def home(request: Request, db: AsyncSession = Depends(get_db)):
     noun_count = await crud.count_nouns(db)
+    # Custom categories with entry counts
+    from app.db import CustomCategory, CustomEntry
+    from sqlalchemy import func as sqlfunc
+    cats_result = await db.execute(select(CustomCategory).order_by(CustomCategory.name))
+    raw_cats = cats_result.scalars().all()
+    custom_cats = []
+    for cat in raw_cats:
+        r = await db.execute(select(sqlfunc.count(CustomEntry.id)).where(CustomEntry.category_id == cat.id))
+        cat.entry_count = r.scalar() or 0
+        custom_cats.append(cat)
     verb_count = await crud.count_verbs(db)
     adj_count = await crud.count_adjectives(db)
     phrase_count = await crud.count_phrases(db)
@@ -22,6 +32,7 @@ async def home(request: Request, db: AsyncSession = Depends(get_db)):
     return templates.TemplateResponse("home.html", {
         "request": request,
         "noun_count": noun_count,
+        "custom_cats": custom_cats,
         "verb_count": verb_count,
         "adj_count": adj_count,
         "phrase_count": phrase_count,

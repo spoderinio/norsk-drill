@@ -105,6 +105,15 @@ h1{font-size:2em;margin-bottom:8px;}
       <div class="card-count">{{ qw_count }} spørreord</div>
       <div class="card-hint hint-special" id="hint-qw">hvem · hva · hvor · når · hvorfor...</div>
     </a>
+    {% for cat in custom_cats %}
+    <a class="card" data-custom-slug="{{ cat.slug }}" href="/practice/custom/{{ cat.slug }}?level=all"
+       style="border-color:{{ cat.color }};">
+      <div class="card-icon">{{ cat.icon }}</div>
+      <div class="card-title">{{ cat.name }}</div>
+      <div class="card-count">{{ cat.entry_count }} ord</div>
+      <div class="card-hint hint-no" id="hint-custom-{{ cat.slug }}">NO → BG</div>
+    </a>
+    {% endfor %}
   </div>
   <div class="admin-link"><a href="/admin/">⚙️ Admin-panel</a></div>
 </div>
@@ -140,11 +149,18 @@ function updateModeUI() {
   const hqw = document.getElementById('hint-qw');
   hqw.textContent = isReverse ? 'BG → NO' : 'hvem · hva · hvor · når · hvorfor...';
   hqw.className = 'card-hint ' + (isReverse ? 'hint-bg' : 'hint-special');
+  document.querySelectorAll('[id^="hint-custom-"]').forEach(h=>{
+    h.textContent = isReverse ? 'BG → NO' : 'NO → BG';
+    h.className = 'card-hint ' + (isReverse ? 'hint-bg' : 'hint-no');
+  });
 }
 
 function updateLinks() {
   ['nouns','verbs','adjectives','phrases'].forEach(cat => {
     document.getElementById('link-' + cat).href = `/practice/${cat}?level=${currentLevel}`;
+  });
+  document.querySelectorAll('[data-custom-slug]').forEach(el=>{
+    el.href = `/practice/custom/${el.dataset.customSlug}?level=${currentLevel}`;
   });
 }
 

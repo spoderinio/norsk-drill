@@ -5,6 +5,8 @@ from contextlib import asynccontextmanager
 from app.db import init_db
 from app.routers import practice, admin
 import os
+from app.routers import practice, admin, custom_categories
+app.include_router(custom_categories.router)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
