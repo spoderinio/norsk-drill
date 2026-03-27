@@ -3,7 +3,8 @@ from fastapi import APIRouter, Request, Depends, Form, UploadFile, File
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.db import get_db, LEVELS
+from app.db import get_db, LEVELS, CustomCategory, CustomEntry
+from sqlalchemy import select
 import app.crud as crud
 import csv, io, json
 
@@ -524,3 +525,80 @@ async def edit_qw_save(qw_id: int, request: Request, db: AsyncSession = Depends(
 async def delete_qw(qw_id: int, db: AsyncSession = Depends(get_db)):
     await crud.delete_question_word(db, qw_id)
     return RedirectResponse("/admin/question-words", status_code=303)
+
+
+# ── CUSTOM CATEGORIES ─────────────────────────────────────────────────────────
+
+def _slugify(s: str) -> str:
+    import re
+    return re.sub(r'[^a-z0-9]+', '-', s.lower()).strip('-')
+
+
+@router.get("/categories", response_class=HTMLResponse)
+async def admin_categories(request: Request, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(CustomCategory).order_by(CustomCategory.name))
+    cats = result.scalars().all()
+    return templates.TemplateResponse("admin/categories.html", {
+        "request": request, "cats": cats
+    })
+
+
+@router.post("/categories/add")
+async def add_category(request: Request, db: AsyncSession = Depends(get_db),
+                        name: str = Form(...), icon: str = Form("📝"),
+                        color: str = Form("#4f8ef7")):
+    slug = _slugify(name)
+    cat = CustomCategory(name=name, slug=slug, icon=icon, color=color)
+    db.add(cat)
+    await db.commit()
+    return RedirectResponse("/admin/categories", status_code=303)
+
+
+@router.post("/categories/delete/{cat_id}")
+async def delete_category(cat_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(CustomCategory).where(CustomCategory.id == cat_id))
+    cat = result.scalar_one_or_none()
+    if cat:
+        await db.execute(
+            __import__('sqlalchemy').delete(CustomEntry).where(CustomEntry.category_id == cat_id)
+        )
+        await db.delete(cat)
+        await db.commit()
+    return RedirectResponse("/admin/categories", status_code=303)
+
+
+@router.get("/categories/{cat_id}/entries", response_class=HTMLResponse)
+async def admin_cat_entries(cat_id: int, request: Request, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(CustomCategory).where(CustomCategory.id == cat_id))
+    cat = result.scalar_one_or_none()
+    if not cat:
+        return RedirectResponse("/admin/categories", status_code=303)
+    result2 = await db.execute(
+        select(CustomEntry).where(CustomEntry.category_id == cat_id).order_by(CustomEntry.norwegian)
+    )
+    entries = result2.scalars().all()
+    return templates.TemplateResponse("admin/cat_entries.html", {
+        "request": request, "cat": cat, "entries": entries, "levels": LEVELS
+    })
+
+
+@router.post("/categories/{cat_id}/entries/add")
+async def add_cat_entry(cat_id: int, db: AsyncSession = Depends(get_db),
+                         norwegian: str = Form(...), translations: str = Form(...),
+                         level: str = Form("A")):
+    trans = [t.strip() for t in translations.replace("|", ",").split(",") if t.strip()]
+    entry = CustomEntry(category_id=cat_id, norwegian=norwegian,
+                        translations=trans, level=level)
+    db.add(entry)
+    await db.commit()
+    return RedirectResponse(f"/admin/categories/{cat_id}/entries", status_code=303)
+
+
+@router.post("/categories/{cat_id}/entries/delete/{entry_id}")
+async def delete_cat_entry(cat_id: int, entry_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(CustomEntry).where(CustomEntry.id == entry_id))
+    entry = result.scalar_one_or_none()
+    if entry:
+        await db.delete(entry)
+        await db.commit()
+    return RedirectResponse(f"/admin/categories/{cat_id}/entries", status_code=303)

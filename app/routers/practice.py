@@ -3,7 +3,8 @@ from fastapi import APIRouter, Request, Depends, Form
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.db import get_db, LEVELS
+from app.db import get_db, LEVELS, CustomCategory
+from sqlalchemy import select
 import app.crud as crud
 
 router = APIRouter()
