@@ -3,10 +3,8 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 from app.db import init_db
-from app.routers import practice, admin
-import os
 from app.routers import practice, admin, custom_categories
-app.include_router(custom_categories.router)
+import os
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -15,10 +13,9 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Norsk Drill", version="3.0", lifespan=lifespan)
 
-# Static files (if folder exists)
 if os.path.isdir("static"):
     app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Routers
 app.include_router(practice.router)
 app.include_router(admin.router)
+app.include_router(custom_categories.router)
