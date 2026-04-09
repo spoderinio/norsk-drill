@@ -208,10 +208,17 @@ function resetSession(){
   loadNext();
 }
 
+function isApple(){return /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent)&&typeof window.AudioContext!=='undefined';}
 function speak(){
-  if(!currentItem||!window.speechSynthesis||reverseMode)return;
-  const u=new SpeechSynthesisUtterance(currentItem.article+' '+currentItem.word);
-  u.lang='nb-NO'; window.speechSynthesis.speak(u);
+  if(!currentItem||reverseMode)return;
+  const text=currentItem.article+' '+currentItem.word;
+  if(isApple()&&window.speechSynthesis){
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang='nb-NO';window.speechSynthesis.speak(u);
+  }else{
+    const audio=new Audio('/tts?text='+encodeURIComponent(text));
+    audio.play();
+  }
 }
 
 document.getElementById('answer-input').addEventListener('keydown',e=>{

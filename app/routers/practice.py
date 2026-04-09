@@ -108,7 +108,7 @@ async def next_verb(request: Request, db: AsyncSession = Depends(get_db)):
         "done": False,
         "id": verb.id,
         "infinitive": verb.infinitive,
-        "presens": verb.presens,
+        "presens": verb.present,
         "preteritum": verb.preteritum,
         "perfect": verb.perfect_participle,
         "translations": verb.translations,
@@ -130,7 +130,7 @@ async def check_verb(request: Request, db: AsyncSession = Depends(get_db)):
     return JSONResponse({
         **result,
         "infinitive": verb.infinitive,
-        "presens": verb.presens,
+        "presens": verb.present,
         "preteritum": verb.preteritum,
         "perfect": verb.perfect_participle,
         "translations": verb.translations,

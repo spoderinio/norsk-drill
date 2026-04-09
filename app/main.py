@@ -4,6 +4,9 @@ from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 from app.db import init_db
 from app.routers import practice, admin, custom_categories
+import sys
+sys.path.insert(0, "/home/spoder/Projects/norsk-drill")
+from piper_tts import router as tts_router
 import os
 
 @asynccontextmanager
@@ -18,4 +21,5 @@ if os.path.isdir("static"):
 
 app.include_router(practice.router)
 app.include_router(admin.router)
+app.include_router(tts_router)
 app.include_router(custom_categories.router)
