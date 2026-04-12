@@ -1,7 +1,7 @@
 """CRUD operations - v3.0"""
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, or_, func
-from app.db import Noun, Verb, Adjective, Phrase, QuestionWord
+from app.db import Noun, Verb, Adjective, Phrase, QuestionWord, CustomEntry, CustomCategory
 from typing import Optional
 
 
@@ -447,6 +447,12 @@ async def search_all(db: AsyncSession, query: str):
         results.append({"type": "question_word", "norwegian": qw.norwegian,
                          "translations": qw.translations, "level": "—", "id": qw.id})
 
+    entries = await db.execute(select(CustomEntry).join(CustomCategory, CustomEntry.category_id == CustomCategory.id).where(
+        or_(CustomEntry.norwegian.ilike(q), CustomEntry.translations.cast(String).ilike(q))
+    ).limit(20))
+    for e in entries.scalars():
+        results.append({"type": "custom", "norwegian": e.norwegian,
+                         "translations": e.translations, "level": e.level, "id": e.id})
     return results
 
 
