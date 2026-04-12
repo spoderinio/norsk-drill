@@ -3,7 +3,7 @@ from fastapi import APIRouter, Request, Depends, Form
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.db import get_db, LEVELS, CustomCategory
+from app.db import get_db, LEVELS, CustomCategory, CustomEntry
 from sqlalchemy import select
 import app.crud as crud
 
@@ -291,3 +291,60 @@ async def search_results(q: str, db: AsyncSession = Depends(get_db)):
         return JSONResponse({"results": []})
     results = await crud.search_all(db, q.strip())
     return JSONResponse({"results": results})
+
+# ── CUSTOM CATEGORIES ─────────────────────────────────────────────────────────
+@router.get("/practice/custom/{cat_slug}", response_class=HTMLResponse)
+async def practice_custom(cat_slug: str, request: Request, db: AsyncSession = Depends(get_db)):
+    from sqlalchemy import select
+    result = await db.execute(select(CustomCategory).where(CustomCategory.slug == cat_slug))
+    cat = result.scalar_one_or_none()
+    if not cat:
+        return RedirectResponse("/", status_code=303)
+    return templates.TemplateResponse("practice/custom.html", {
+        "request": request, "cat": cat, "levels": LEVELS
+    })
+
+@router.post("/practice/custom/{cat_slug}/next")
+async def next_custom(cat_slug: str, request: Request, db: AsyncSession = Depends(get_db)):
+    from sqlalchemy import select
+    data = await request.json()
+    exclude = data.get("seen_ids", [])
+    level = data.get("level", "all")
+    cat_r = await db.execute(select(CustomCategory).where(CustomCategory.slug == cat_slug))
+    cat = cat_r.scalar_one_or_none()
+    if not cat:
+        return JSONResponse({"done": True})
+    q = select(CustomEntry).where(CustomEntry.category_id == cat.id)
+    if level != "all":
+        q = q.where(CustomEntry.level == level)
+    if exclude:
+        q = q.where(CustomEntry.id.notin_(exclude))
+    from sqlalchemy import func
+    q = q.order_by(func.random()).limit(1)
+    result = await db.execute(q)
+    entry = result.scalar_one_or_none()
+    if not entry:
+        return JSONResponse({"done": True})
+    return JSONResponse({
+        "done": False,
+        "id": entry.id,
+        "norwegian": entry.norwegian,
+        "translations": entry.translations,
+        "level": entry.level,
+    })
+
+@router.post("/practice/custom/{cat_slug}/check")
+async def check_custom(cat_slug: str, request: Request, db: AsyncSession = Depends(get_db)):
+    from sqlalchemy import select
+    data = await request.json()
+    result = await db.execute(select(CustomEntry).where(CustomEntry.id == data["id"]))
+    entry = result.scalar_one_or_none()
+    if not entry:
+        return JSONResponse({"error": True})
+    answer = crud._normalize(data.get("answer", ""))
+    correct = any(answer == crud._normalize(t) for t in (entry.translations or []))
+    return JSONResponse({
+        "correct": correct,
+        "norwegian": entry.norwegian,
+        "translations": entry.translations,
+    })

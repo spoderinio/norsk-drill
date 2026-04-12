@@ -125,7 +125,7 @@ async def create_verb(db: AsyncSession, infinitive: str, presens: str = None,
     existing = await db.execute(select(Verb).where(Verb.infinitive == infinitive))
     if existing.scalar_one_or_none():
         return None
-    verb = Verb(infinitive=infinitive, presens=presens, preteritum=preteritum,
+    verb = Verb(infinitive=infinitive, present=presens, preteritum=preteritum,
                 perfect_participle=perfect_participle, translations=translations or [],
                 tags=tags, group=group, group_description=group_description, level=level or "A")
     db.add(verb)
@@ -162,7 +162,7 @@ async def check_verb_answer(verb: Verb, presens_ans: str, preteritum_ans: str, p
             return False
         return _normalize(given) == _normalize(expected)
     return {
-        "presens": chk(verb.presens, presens_ans),
+        "presens": chk(verb.present, presens_ans),
         "preteritum": chk(verb.preteritum, preteritum_ans),
         "perfect": chk(verb.perfect_participle, perfect_ans),
     }

@@ -125,7 +125,7 @@ async function loadNext(){
     document.getElementById('answer-input').placeholder='Frase på norsk...';
     document.getElementById('tts-btn').classList.add('hidden');
   } else {
-    wd.textContent=data.phrase;
+    wd.textContent=data.norwegian;
     wd.className='word-display word-no';
     document.getElementById('card-label').textContent='🗣️ Hva betyr dette på bulgarsk?';
     document.getElementById('answer-input').placeholder='Oversettelse...';
@@ -139,12 +139,12 @@ async function checkAnswer(){
   const answer=document.getElementById('answer-input').value.trim();
   if(reverseMode){
     const ua=answer.toLowerCase().replace(/[.!?,;:]+$/,'').trim();
-    const correct_phrase=currentItem.phrase.toLowerCase().replace(/[.!?,;:]+$/,'').trim();
-    showResult(ua===correct_phrase, answer, currentItem.phrase, (currentItem.translations||[]).join(', '));
+    const correct_phrase=currentItem.norwegian.toLowerCase().replace(/[.!?,;:]+$/,'').trim();
+    showResult(ua===correct_phrase, answer, currentItem.norwegian, (currentItem.translations||[]).join(', '));
   } else {
     const resp=await fetch('/practice/phrases/check',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:currentItem.id,answer})});
     const data=await resp.json();
-    showResult(data.correct, answer, (data.translations||[]).join(', '), currentItem.phrase);
+    showResult(data.correct, answer, (data.translations||[]).join(', '), currentItem.norwegian);
   }
 }
 
@@ -163,8 +163,8 @@ function skipWord(){
   if(!currentItem)return;
   wrong++;document.getElementById('stat-wrong').textContent=wrong;
   const userAns=document.getElementById('answer-input').value.trim();
-  const correctAns=reverseMode?currentItem.phrase:(currentItem.translations||[]).join(', ');
-  const subAns=reverseMode?(currentItem.translations||[]).join(', '):currentItem.phrase;
+  const correctAns=reverseMode?currentItem.norwegian:(currentItem.translations||[]).join(', ');
+  const subAns=reverseMode?(currentItem.translations||[]).join(', '):currentItem.norwegian;
   document.getElementById('result-content').innerHTML=
     `<div class="result-box result-wrong"><div class="result-label">⏭ Riktig svar:</div><div class="result-main">${correctAns}</div><div class="result-sub">${subAns}</div><div class="result-yours">Du skrev: ${userAns||'—'}</div></div>`;
   document.getElementById('result-area').classList.remove('hidden');
@@ -185,7 +185,7 @@ function resetSession(){
   document.getElementById('practice-card').classList.remove('hidden');
   loadNext();
 }
-function speak(){if(!currentItem||!window.speechSynthesis||reverseMode)return;const u=new SpeechSynthesisUtterance(currentItem.phrase);u.lang='nb-NO';window.speechSynthesis.speak(u);}
+function speak(){if(!currentItem||!window.speechSynthesis||reverseMode)return;const u=new SpeechSynthesisUtterance(currentItem.norwegian);u.lang='nb-NO';window.speechSynthesis.speak(u);}
 document.getElementById('answer-input').addEventListener('keydown',e=>{
   if(e.key==='Enter'){if(!document.getElementById('result-area').classList.contains('hidden'))loadNext();else checkAnswer();}
 });

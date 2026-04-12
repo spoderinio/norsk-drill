@@ -103,7 +103,7 @@ const badge=document.getElementById('mode-badge');
 if(reverseMode){badge.textContent='BG → NO';badge.className='mode-badge bg';}
 
 function changeLevel(level,btn){
-  currentLevel=level;localStorage.setItem('drill_level',level);
+  currentLevel=level;localStorage.setItem('drill_level_'+SLUG,level);
   document.querySelectorAll('.lvl-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');resetSession();
 }
@@ -183,7 +183,7 @@ function speak(){if(!currentItem||!window.speechSynthesis||reverseMode)return;co
 document.getElementById('answer-input').addEventListener('keydown',e=>{
   if(e.key==='Enter'){if(!document.getElementById('result-area').classList.contains('hidden'))loadNext();else checkAnswer();}
 });
-const saved=localStorage.getItem('drill_level')||'all';
+const saved=localStorage.getItem('drill_level_'+SLUG)||'all';
 const savedBtn=document.querySelector(`.lvl-btn[data-level="${saved}"]`);
 if(savedBtn){currentLevel=saved;document.querySelectorAll('.lvl-btn').forEach(b=>b.classList.remove('active'));savedBtn.classList.add('active');}
 loadNext();
