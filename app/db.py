@@ -34,7 +34,7 @@ class Verb(Base):
     __tablename__ = "verbs"
     id          = Column(Integer, primary_key=True, index=True)
     infinitive  = Column(String(200), nullable=False, index=True)
-    present     = Column(String(200), nullable=True)
+    presens     = Column(String(200), nullable=True)
     preteritum  = Column(String(200), nullable=True)
     perfect_participle = Column(String(200), nullable=True)
     translations = Column(JSON, nullable=False)

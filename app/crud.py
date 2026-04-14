@@ -125,9 +125,10 @@ async def create_verb(db: AsyncSession, infinitive: str, presens: str = None,
     existing = await db.execute(select(Verb).where(Verb.infinitive == infinitive))
     if existing.scalar_one_or_none():
         return None
-    verb = Verb(infinitive=infinitive, present=presens, preteritum=preteritum,
+    auto_group, auto_desc = detect_verb_group(infinitive, preteritum or "")
+    verb = Verb(infinitive=infinitive, presens=presens, preteritum=preteritum,
                 perfect_participle=perfect_participle, translations=translations or [],
-                tags=tags, group=group, group_description=group_description, level=level or "A")
+                tags=tags, group=group or auto_group, group_description=group_description or auto_desc, level=level or "A")
     db.add(verb)
     await db.commit()
     await db.refresh(verb)
@@ -138,6 +139,12 @@ async def update_verb(db: AsyncSession, verb_id: int, **kwargs):
     verb = await get_verb(db, verb_id)
     if not verb:
         return None
+    if "preteritum" in kwargs and kwargs.get("preteritum"):
+        auto_group, auto_desc = detect_verb_group(verb.infinitive, kwargs["preteritum"])
+        if not kwargs.get("group"):
+            kwargs["group"] = auto_group
+        if not kwargs.get("group_description"):
+            kwargs["group_description"] = auto_desc
     for k, v in kwargs.items():
         if hasattr(verb, k):
             setattr(verb, k, v)
@@ -162,7 +169,7 @@ async def check_verb_answer(verb: Verb, presens_ans: str, preteritum_ans: str, p
             return False
         return _normalize(given) == _normalize(expected)
     return {
-        "presens": chk(verb.present, presens_ans),
+        "presens": chk(verb.presens, presens_ans),
         "preteritum": chk(verb.preteritum, preteritum_ans),
         "perfect": chk(verb.perfect_participle, perfect_ans),
     }
@@ -457,3 +464,47 @@ async def search_all(db: AsyncSession, query: str):
 
 
 from sqlalchemy import String
+
+# ── VERB GROUP AUTO-DETECT ────────────────────────────────────────────────────
+
+VERB_GROUPS = {
+    "1": "I-ва група: Глаголи чийто preteritum завършва на -et. (å kaste → kastet)",
+    "2": "II-ра група: Глаголи чийто preteritum завършва на -te. (å høre → hørte)",
+    "3": "III-та група: Глаголи чийто preteritum завършва на -de. (å prøve → prøvde)",
+    "4": "IV-та група: Глаголи завършващи на ударена гласна. Preteritum на -dde. (å bo → bodde)",
+    "неправилни": "Неправилен глагол — формите трябва да се запомнят наизуст.",
+}
+
+IRREGULAR_VERBS = {
+    "være", "bli", "gi", "drikke", "synge", "treffe", "hjelpe", "trekke",
+    "skrive", "skrike", "gripe", "drive", "holde", "falle", "hete", "gråte",
+    "komme", "sove", "stå", "slå", "gå", "få", "dra", "ta", "sette", "legge",
+    "si", "se", "vite", "ville", "skulle", "måtte", "kunne", "burde", "ha",
+    "gjøre", "brekke", "slippe", "springe", "angripe", "berettige",
+}
+
+def detect_verb_group(infinitive: str, preteritum: str) -> tuple[str, str]:
+    """Returns (group_key, group_description)"""
+    if not infinitive or not preteritum:
+        return "", ""
+
+    # Normalize — strip "å " prefix
+    inf = infinitive.strip().lower()
+    if inf.startswith("å "):
+        inf = inf[2:]
+    pret = preteritum.strip().lower()
+
+    # Check irregular first
+    if inf in IRREGULAR_VERBS:
+        return "неправилни", VERB_GROUPS["неправилни"]
+
+    if pret.endswith("dde"):
+        return "4", VERB_GROUPS["4"]
+    if pret.endswith("de"):
+        return "3", VERB_GROUPS["3"]
+    if pret.endswith("te"):
+        return "2", VERB_GROUPS["2"]
+    if pret.endswith("et"):
+        return "1", VERB_GROUPS["1"]
+
+    return "неправилни", VERB_GROUPS["неправилни"]
