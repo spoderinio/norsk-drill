@@ -168,12 +168,13 @@ async def check_verb_answer(verb: Verb, presens_ans: str, preteritum_ans: str, p
         if not given or not given.strip():
             return False
         return _normalize(given) == _normalize(expected)
-    return {
+    results = {
         "presens": chk(verb.presens, presens_ans),
         "preteritum": chk(verb.preteritum, preteritum_ans),
         "perfect": chk(verb.perfect_participle, perfect_ans),
     }
-
+    results["all_correct"] = all(results.values())
+    return results
 
 async def count_verbs(db: AsyncSession, level: Optional[str] = None):
     q = select(func.count(Verb.id))
@@ -212,8 +213,10 @@ async def create_adjective(db: AsyncSession, base: str, neuter: str = None, plur
     existing = await db.execute(select(Adjective).where(Adjective.base == base))
     if existing.scalar_one_or_none():
         return None
+    auto_group, auto_desc = detect_adj_group(base, neuter or "", plural or "")
     adj = Adjective(base=base, neuter=neuter, plural=plural, translations=translations or [],
-                    tags=tags, group=group, group_description=group_description, level=level or "A")
+                tags=tags, group=group or auto_group,
+                group_description=group_description or auto_desc, level=level or "A")
     db.add(adj)
     await db.commit()
     await db.refresh(adj)
@@ -224,6 +227,16 @@ async def update_adjective(db: AsyncSession, adj_id: int, **kwargs):
     adj = await get_adjective(db, adj_id)
     if not adj:
         return None
+    if "base" in kwargs or "neuter" in kwargs or "plural" in kwargs:
+        auto_group, auto_desc = detect_adj_group(
+            kwargs.get("base", adj.base),
+            kwargs.get("neuter", adj.neuter or ""),
+            kwargs.get("plural", adj.plural or "")
+        )
+        if not kwargs.get("group"):
+            kwargs["group"] = auto_group
+        if not kwargs.get("group_description"):
+            kwargs["group_description"] = auto_desc
     for k, v in kwargs.items():
         if hasattr(adj, k):
             setattr(adj, k, v)
@@ -508,3 +521,48 @@ def detect_verb_group(infinitive: str, preteritum: str) -> tuple[str, str]:
         return "1", VERB_GROUPS["1"]
 
     return "неправилни", VERB_GROUPS["неправилни"]
+
+
+# ── ADJECTIVE GROUP AUTO-DETECT ───────────────────────────────────────────────
+
+ADJ_GROUPS = {
+    "1": "I-ва група: Стандартни прилагателни. Neuter: +t, Plural: +e. (stor → stort → store)",
+    "2": "II-ра група: Завършващи на -ig. Neuter: без промяна, Plural: +e. (billig → billig → billige)",
+    "3": "III-та група: Завършващи на -el/-er/-en. Губят вокал в plural. (gammel → gammelt → gamle)",
+    "4": "IV-та група: Завършващи на ударена гласна (-å/-y/-u). Neuter: +tt. (grå → grått → grå)",
+    "неизменяемо": "Неизменяемо прилагателно — същата форма в neuter и plural. (bra → bra → bra)",
+}
+
+INVARIABLE_ADJS = {
+    "bra", "litt", "glad", "flink", "norsk", "svensk", "dansk", "engelsk",
+    "fremmed", "spent", "fornøyd", "gift", "skilt", "voksen",
+}
+
+def detect_adj_group(base: str, neuter: str, plural: str) -> tuple[str, str]:
+    """Returns (group_key, group_description)"""
+    if not base:
+        return "", ""
+
+    b = base.strip().lower()
+
+    if b in INVARIABLE_ADJS:
+        return "неизменяемо", ADJ_GROUPS["неизменяемо"]
+
+    # Група 4 — завършва на ударена гласна
+    if b.endswith(("å", "y", "u")):
+        return "4", ADJ_GROUPS["4"]
+
+    # Група 2 — завършва на -ig
+    if b.endswith("ig"):
+        return "2", ADJ_GROUPS["2"]
+
+    # Група 3 — завършва на -el/-er/-en
+    if b.endswith(("el", "er", "en")):
+        return "3", ADJ_GROUPS["3"]
+
+    # Ако neuter и plural са дадени и са еднакви с base — неизменяемо
+    if neuter and plural:
+        if neuter.strip().lower() == b and plural.strip().lower() == b:
+            return "неизменяемо", ADJ_GROUPS["неизменяемо"]
+
+    return "1", ADJ_GROUPS["1"]

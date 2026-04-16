@@ -180,7 +180,7 @@ async function checkAnswer(){
     const resp=await fetch('/practice/verbs/check',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({id:currentItem.id,presens:document.getElementById('inp-presens').value,preteritum:document.getElementById('inp-preteritum').value,perfect:document.getElementById('inp-perfect').value})});
     const data=await resp.json();
-    const allOk=data.presens&&data.preteritum&&data.perfect;
+    const allOk=data.presens&&data.preteritum&&data.perfect&&data.all_correct;
     if(allOk)correct++;else wrong++;
     document.getElementById('stat-correct').textContent=correct;
     document.getElementById('stat-wrong').textContent=wrong;
