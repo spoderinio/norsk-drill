@@ -162,7 +162,7 @@ function showResultNormal(isCorrect,translations,userAns){
   document.getElementById('stat-wrong').textContent=wrong;
   const trans=(translations||[]).join(', ');
   document.getElementById('result-content').innerHTML=isCorrect
-    ?`<div class="result-box result-correct"><div class="result-label">✅ Riktig!</div><div class="result-sub">${trans}</div></div>`
+    ?`<div class="result-box result-correct"><div class="result-label">✅ Riktig!</div><div class="result-sub">${trans}</div><div class="result-yours">📋 ${currentItem.article} ${currentItem.word} · ${currentItem.definite||'—'} · ${currentItem.plural||'—'}</div></div>`
     :`<div class="result-box result-wrong"><div class="result-label">❌ Riktig svar:</div><div class="result-main">${trans}</div><div class="result-yours">Du skrev: ${userAns||'—'}</div></div>`;
   document.getElementById('result-area').classList.remove('hidden');
   document.getElementById('answer-input').disabled=true;
