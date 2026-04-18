@@ -602,3 +602,25 @@ async def delete_cat_entry(cat_id: int, entry_id: int, db: AsyncSession = Depend
         await db.delete(entry)
         await db.commit()
     return RedirectResponse(f"/admin/categories/{cat_id}/entries", status_code=303)
+
+@router.get("/nouns/missing-forms")
+async def nouns_missing_forms(db: AsyncSession = Depends(get_db)):
+    from sqlalchemy import or_
+    result = await db.execute(
+        select(Noun).where(or_(Noun.definite == None, Noun.plural == None))
+    )
+    nouns = result.scalars().all()
+    return JSONResponse({"nouns": [{"id": n.id, "word": n.word} for n in nouns]})
+
+
+@router.post("/nouns/update-forms/{noun_id}")
+async def update_noun_forms(noun_id: int, request: Request, db: AsyncSession = Depends(get_db)):
+    data = await request.json()
+    noun = await crud.get_noun(db, noun_id)
+    if noun:
+        if data.get("definite") and not noun.definite:
+            noun.definite = data["definite"]
+        if data.get("plural") and not noun.plural:
+            noun.plural = data["plural"]
+        await db.commit()
+    return JSONResponse({"ok": True})

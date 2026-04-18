@@ -190,6 +190,56 @@ td{padding:7px 8px;border-bottom:1px solid var(--border);vertical-align:middle;}
     {% endif %}
   </div>
 </div>
+async function autoFillAll() {
+  const status = document.getElementById('bulk-status');
+  status.textContent = '⏳ Starter...';
+  
+  // Вземи всички съществителни без definite или plural от сървъра
+  const resp = await fetch('/admin/nouns/missing-forms');
+  const data = await resp.json();
+  const nouns = data.nouns;
+  
+  if (!nouns.length) { status.textContent = '✅ Всички са попълнени!'; return; }
+  
+  let done = 0, failed = 0;
+  
+  for (const noun of nouns) {
+    try {
+      const r1 = await fetch(`https://oda.uib.no/opal/prod/api/bm/articles?w=${encodeURIComponent(noun.word)}&dict=bm&scope=e`);
+      const d1 = await r1.json();
+      const ids = d1?.articles?.bm;
+      if (!ids || ids.length === 0) { failed++; continue; }
+
+      const query = `{ article(id: ${ids[0]}, dictionary: Bokmaalsordboka) { lemmas { paradigms { inflections { tags wordForm } } } } }`;
+      const r2 = await fetch('https://api.ordbokapi.org/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query })
+      });
+      const d2 = await r2.json();
+      const inflections = d2?.data?.article?.lemmas?.[0]?.paradigms?.[0]?.inflections || [];
+
+      const definite = inflections.find(i => i.tags.includes('Bestemt') && i.tags.includes('Eintal'))?.wordForm || '';
+      const plural = inflections.find(i => i.tags.includes('Ubestemt') && i.tags.includes('Fleirtal'))?.wordForm || '';
+
+      if (definite || plural) {
+        await fetch(`/admin/nouns/update-forms/${noun.id}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ definite, plural })
+        });
+        done++;
+      } else {
+        failed++;
+      }
+      status.textContent = `⏳ ${done}/${nouns.length} done, ${failed} failed...`;
+      await new Promise(r => setTimeout(r, 200)); // пауза за да не спамим API-то
+    } catch(e) {
+      failed++;
+    }
+  }
+  status.textContent = `✅ Готово! ${done} попълнени, ${failed} неуспешни.`;
+}
 <script>
 async function autoFillNoun() {
   const word = document.getElementById('noun-word').value.trim();
@@ -238,5 +288,9 @@ async function autoFillNoun() {
   }
 }
 </script>
+<div style="margin-bottom:16px;">
+  <button onclick="autoFillAll()" style="background:#2ecc71;color:#000;border:none;border-radius:8px;padding:10px 20px;cursor:pointer;font-weight:600;font-size:.95em;">⚡ Auto-fill всички непопълнени</button>
+  <span id="bulk-status" style="font-size:.85em;color:var(--muted);margin-left:12px;"></span>
+</div>
 </body>
 </html>
