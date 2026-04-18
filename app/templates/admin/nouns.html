@@ -190,6 +190,53 @@ td{padding:7px 8px;border-bottom:1px solid var(--border);vertical-align:middle;}
     {% endif %}
   </div>
 </div>
+<script>
+async function autoFillNoun() {
+  const word = document.getElementById('noun-word').value.trim();
+  if (!word) { alert('Skriv inn ordet først'); return; }
+
+  const definiteEl = document.getElementById('noun-definite');
+  const pluralEl = document.getElementById('noun-plural');
+  const articleEl = document.getElementById('noun-article');
+  const status = document.getElementById('noun-status');
+
+  try {
+    status.textContent = '⏳ Søker...';
+
+    const r1 = await fetch(`https://oda.uib.no/opal/prod/api/bm/articles?w=${encodeURIComponent(word)}&dict=bm&scope=e`);
+    const d1 = await r1.json();
+    const ids = d1?.articles?.bm;
+    if (!ids || ids.length === 0) { status.textContent = '❌ Ikke funnet'; return; }
+
+    const query = `{ article(id: ${ids[0]}, dictionary: Bokmaalsordboka) { lemmas { paradigms { inflections { tags wordForm } } } } }`;
+    const r2 = await fetch('https://api.ordbokapi.org/graphql', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query })
+    });
+    const d2 = await r2.json();
+    const inflections = d2?.data?.article?.lemmas?.[0]?.paradigms?.[0]?.inflections || [];
+
+    const definite = inflections.find(i => i.tags.includes('Bestemt') && i.tags.includes('Eintal'))?.wordForm || '';
+    const plural = inflections.find(i => i.tags.includes('Ubestemt') && i.tags.includes('Fleirtal'))?.wordForm || '';
+    const gender = inflections.find(i => i.tags.includes('HankjoennHokjoenn'))?.wordForm;
+    const neuter = inflections.find(i => i.tags.includes('Inkjekjoenn'))?.wordForm;
+
+    if (definite && !definiteEl.value.trim()) definiteEl.value = definite;
+    if (plural && !pluralEl.value.trim()) pluralEl.value = plural;
+
+    // Auto-detect article
+    if (neuter && !gender) {
+      articleEl.value = 'et';
+    } else if (gender) {
+      articleEl.value = 'en';
+    }
+
+    status.textContent = definite ? '✅ Ferdig!' : '⚠️ Fant ikke former';
+  } catch(e) {
+    status.textContent = '❌ Feil: ' + e.message;
+  }
+}
 async function autoFillAll() {
   const status = document.getElementById('bulk-status');
   status.textContent = '⏳ Starter...';
@@ -239,53 +286,6 @@ async function autoFillAll() {
     }
   }
   status.textContent = `✅ Готово! ${done} попълнени, ${failed} неуспешни.`;
-}
-<script>
-async function autoFillNoun() {
-  const word = document.getElementById('noun-word').value.trim();
-  if (!word) { alert('Skriv inn ordet først'); return; }
-
-  const definiteEl = document.getElementById('noun-definite');
-  const pluralEl = document.getElementById('noun-plural');
-  const articleEl = document.getElementById('noun-article');
-  const status = document.getElementById('noun-status');
-
-  try {
-    status.textContent = '⏳ Søker...';
-
-    const r1 = await fetch(`https://oda.uib.no/opal/prod/api/bm/articles?w=${encodeURIComponent(word)}&dict=bm&scope=e`);
-    const d1 = await r1.json();
-    const ids = d1?.articles?.bm;
-    if (!ids || ids.length === 0) { status.textContent = '❌ Ikke funnet'; return; }
-
-    const query = `{ article(id: ${ids[0]}, dictionary: Bokmaalsordboka) { lemmas { paradigms { inflections { tags wordForm } } } } }`;
-    const r2 = await fetch('https://api.ordbokapi.org/graphql', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query })
-    });
-    const d2 = await r2.json();
-    const inflections = d2?.data?.article?.lemmas?.[0]?.paradigms?.[0]?.inflections || [];
-
-    const definite = inflections.find(i => i.tags.includes('Bestemt') && i.tags.includes('Eintal'))?.wordForm || '';
-    const plural = inflections.find(i => i.tags.includes('Ubestemt') && i.tags.includes('Fleirtal'))?.wordForm || '';
-    const gender = inflections.find(i => i.tags.includes('HankjoennHokjoenn'))?.wordForm;
-    const neuter = inflections.find(i => i.tags.includes('Inkjekjoenn'))?.wordForm;
-
-    if (definite && !definiteEl.value.trim()) definiteEl.value = definite;
-    if (plural && !pluralEl.value.trim()) pluralEl.value = plural;
-
-    // Auto-detect article
-    if (neuter && !gender) {
-      articleEl.value = 'et';
-    } else if (gender) {
-      articleEl.value = 'en';
-    }
-
-    status.textContent = definite ? '✅ Ferdig!' : '⚠️ Fant ikke former';
-  } catch(e) {
-    status.textContent = '❌ Feil: ' + e.message;
-  }
 }
 </script>
 <div style="margin-bottom:16px;">
