@@ -64,25 +64,25 @@ td{padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:middle;}
 
   <div class="section">
     <h3>➕ Legg til verb</h3>
-    <form method="post" action="/admin/verbs/add">
+    <form method="post" action="/admin/verbs/add" id="add-verb-form">
       <div class="form-row">
-        <div class="f"><label>Infinitiv</label><input name="infinitive" placeholder="å gå" required/></div>
-        <div class="f"><label>Presens</label><input name="presens" placeholder="går"/></div>
-        <div class="f"><label>Preteritum</label><input name="preteritum" placeholder="gikk"/></div>
-        <div class="f"><label>Perfektum</label><input name="perfect_participle" placeholder="gått"/></div>
+        <div class="f"><label>Infinitiv</label><input name="infinitive" id="inf-input" placeholder="å gå" required/></div>
+        <div class="f"><label>Presens</label><input name="presens" id="presens-input" placeholder="går"/></div>
+        <div class="f"><label>Preteritum</label><input name="preteritum" id="preteritum-input" placeholder="gikk"/></div>
+        <div class="f"><label>Perfektum</label><input name="perfect_participle" id="perfect-input" placeholder="gått"/></div>
         <div class="f"><label>Oversettelse</label><input name="translations" placeholder="ходя, вървя" required/></div>
-        <div class="f-sm">
-          <label>Nivå</label>
-          <select name="level" class="level-select">
-            <option value="A">A</option>
-            {% for lvl in levels %}{% if lvl != 'A' %}<option value="{{ lvl }}">{{ lvl }}</option>{% endif %}{% endfor %}
-          </select>
+      </div>
+      <div class="form-row">
+        <div class="f" style="flex:0 0 auto;">
+          <button type="button" id="autofill-btn" onclick="autoFill()" style="background:#2ecc71;color:#000;border:none;border-radius:8px;padding:9px 16px;cursor:pointer;font-weight:600;">⚡ Auto-fill</button>
+          <span id="autofill-status" style="font-size:.8em;color:var(--muted);margin-left:8px;"></span>
         </div>
-        <div><label>&nbsp;</label><button class="btn btn-primary" type="submit">➕</button></div>
       </div>
       <div class="form-row">
         <div class="f"><label>Gruppe</label><input name="group" placeholder="1, 2, 3..."/></div>
         <div class="f" style="flex:2"><label>Gruppebeskrivelse</label><input name="group_description" placeholder="Verb som slutter på -er i presens"/></div>
+        <div class="f" style="flex:0 0 120px;"><label>Nivå</label><select name="level">{% for l in levels %}<option value="{{ l }}">{{ l }}</option>{% endfor %}</select></div>
+        <div class="f" style="flex:0 0 100px;"><button type="submit" style="width:100%;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:9px;cursor:pointer;font-weight:600;">Legg til</button></div>
       </div>
     </form>
   </div>
@@ -158,5 +158,49 @@ td{padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:middle;}
     {% endif %}
   </div>
 </div>
+<script>
+async function autoFill() {
+  const inf = document.getElementById('inf-input').value.trim();
+  if (!inf) { alert('Skriv inn infinitiv først'); return; }
+  
+  const presensEl = document.getElementById('presens-input');
+  const preteritumEl = document.getElementById('preteritum-input');
+  const perfectEl = document.getElementById('perfect-input');
+  const status = document.getElementById('autofill-status');
+
+  const word = inf.toLowerCase().startsWith('å ') ? inf.slice(2).trim() : inf.trim();
+
+  try {
+    status.textContent = '⏳ Søker...';
+
+    const r1 = await fetch(`https://oda.uib.no/opal/prod/api/bm/articles?w=${encodeURIComponent(word)}&dict=bm&scope=e`);
+    const d1 = await r1.json();
+    const ids = d1?.articles?.bm;
+    if (!ids || ids.length === 0) { status.textContent = '❌ Ikke funnet'; return; }
+
+    const query = `{ article(id: ${ids[0]}, dictionary: Bokmaalsordboka) { lemmas { paradigms { inflections { tags wordForm } } } } }`;
+    const r2 = await fetch('https://api.ordbokapi.org/graphql', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query })
+    });
+    const d2 = await r2.json();
+    const inflections = d2?.data?.article?.lemmas?.[0]?.paradigms?.[0]?.inflections || [];
+
+    const get = (tag) => inflections.find(i => i.tags.includes(tag) && i.tags.length <= 2)?.wordForm || '';
+    const presens = get('Presens');
+    const preteritum = get('Preteritum');
+    const perfect = get('PerfektPartisipp');
+
+    if (presens && !presensEl.value.trim()) presensEl.value = presens;
+    if (preteritum && !preteritumEl.value.trim()) preteritumEl.value = preteritum;
+    if (perfect && !perfectEl.value.trim()) perfectEl.value = perfect;
+
+    status.textContent = presens ? '✅ Ferdig!' : '⚠️ Fant ikke former';
+  } catch(e) {
+    status.textContent = '❌ Feil: ' + e.message;
+  }
+}
+</script>
 </body>
 </html>
