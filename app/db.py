@@ -95,7 +95,8 @@ class CustomEntry(Base):
     level       = Column(String(10), nullable=False, default="A", server_default="A")
 
 
-engine = create_async_engine(settings.DATABASE_URL, echo=False)
+import json
+engine = create_async_engine(settings.DATABASE_URL, echo=False, json_serializer=lambda obj: json.dumps(obj, ensure_ascii=False))
 async_session_maker = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 
