@@ -37,10 +37,10 @@ select.level-select{border-color:var(--accent);color:var(--accent);font-weight:7
   <div class="section">
     <form method="post" action="/admin/verbs/edit/{{ verb.id }}">
       <div class="row4">
-        <div class="field"><label>Infinitiv</label><input name="infinitive" value="{{ verb.infinitive }}" required/></div>
-        <div class="field"><label>Presens</label><input name="presens" value="{{ verb.presens or '' }}"/></div>
-        <div class="field"><label>Preteritum</label><input name="preteritum" value="{{ verb.preteritum or '' }}"/></div>
-        <div class="field"><label>Perfektum</label><input name="perfect_participle" value="{{ verb.perfect_participle or '' }}"/></div>
+        <div class="field"><label>Infinitiv</label><input name="infinitive" id="inf-input" value="{{ verb.infinitive }}" required/></div>
+        <div class="field"><label>Presens</label><input name="presens" id="presens-input" value="{{ verb.presens or '' }}"/></div>
+        <div class="field"><label>Preteritum</label><input name="preteritum" id="preteritum-input" value="{{ verb.preteritum or '' }}"/></div>
+        <div class="field"><label>Perfektum</label><input name="perfect_participle" id="perfect-input" value="{{ verb.perfect_participle or '' }}"/></div>
       </div>
       <div class="field"><label>Oversettelse</label><input name="translations" value="{{ verb.translations | join(', ') }}" required/></div>
       <div class="row2">
@@ -57,9 +57,55 @@ select.level-select{border-color:var(--accent);color:var(--accent);font-weight:7
       <div class="btn-row">
         <button class="btn btn-save" type="submit">💾 Lagre</button>
         <a href="/admin/verbs"><button class="btn btn-cancel" type="button">Avbryt</button></a>
+        <button type="button" onclick="autoFill()" style="background:#2ecc71;color:#000;border:none;border-radius:8px;padding:10px 16px;cursor:pointer;font-weight:600;margin-bottom:8px;">⚡ Auto-fill</button>
+        <span id="autofill-status" style="font-size:.8em;color:var(--muted);margin-left:8px;"></span>
       </div>
     </form>
   </div>
 </div>
+<script>
+async function autoFill() {
+  const inf = document.getElementById('inf-input').value.trim();
+  if (!inf) { alert('Skriv inn infinitiv først'); return; }
+  
+  const presensEl = document.getElementById('presens-input');
+  const preteritumEl = document.getElementById('preteritum-input');
+  const perfectEl = document.getElementById('perfect-input');
+  const status = document.getElementById('autofill-status');
+
+  const word = inf.toLowerCase().startsWith('å ') ? inf.slice(2).trim() : inf.trim();
+
+  try {
+    status.textContent = '⏳ Søker...';
+
+    const r1 = await fetch(`https://oda.uib.no/opal/prod/api/bm/articles?w=${encodeURIComponent(word)}&dict=bm&scope=e`);
+    const d1 = await r1.json();
+    const ids = d1?.articles?.bm;
+    if (!ids || ids.length === 0) { status.textContent = '❌ Ikke funnet'; return; }
+
+    const query = `{ article(id: ${ids[0]}, dictionary: Bokmaalsordboka) { lemmas { paradigms { inflections { tags wordForm } } } } }`;
+    const r2 = await fetch('https://api.ordbokapi.org/graphql', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query })
+    });
+    const d2 = await r2.json();
+    const inflections = d2?.data?.article?.lemmas?.[0]?.paradigms?.[0]?.inflections || [];
+
+    const get = (tag) => inflections.find(i => i.tags.includes(tag) && i.tags.length <= 2)?.wordForm || '';
+    const presens = get('Presens');
+    const preteritum = get('Preteritum');
+    const perfect = get('PerfektPartisipp');
+
+    if (presens && !presensEl.value.trim()) presensEl.value = presens;
+    if (preteritum && !preteritumEl.value.trim()) preteritumEl.value = preteritum;
+    if (perfect && !perfectEl.value.trim()) perfectEl.value = perfect;
+
+    status.textContent = presens ? '✅ Ferdig!' : '⚠️ Fant ikke former';
+  } catch(e) {
+    status.textContent = '❌ Feil: ' + e.message;
+  }
+}
+</script>
 </body>
 </html>

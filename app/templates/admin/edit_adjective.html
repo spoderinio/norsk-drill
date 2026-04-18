@@ -37,9 +37,9 @@ select.level-select{border-color:var(--accent);color:var(--accent);font-weight:7
   <div class="section">
     <form method="post" action="/admin/adjectives/edit/{{ adjective.id }}">
       <div class="row3">
-        <div class="field"><label>Grunnform</label><input name="base" value="{{ adjective.base }}" required/></div>
-        <div class="field"><label>Intetkjønn</label><input name="neuter" value="{{ adjective.neuter or '' }}"/></div>
-        <div class="field"><label>Flertall</label><input name="plural" value="{{ adjective.plural or '' }}"/></div>
+        <div class="field"><label>Grunnform</label><input name="base" id="adj-base" value="{{ adjective.base }}" required/></div>
+        <div class="field"><label>Intetkjønn</label><input name="neuter" id="adj-neuter" value="{{ adjective.neuter or '' }}"/></div>
+        <div class="field"><label>Flertall</label><input name="plural" id="adj-plural" value="{{ adjective.plural or '' }}"/></div>
       </div>
       <div class="field"><label>Oversettelse</label><input name="translations" value="{{ adjective.translations | join(', ') }}" required/></div>
       <div class="row2">
@@ -56,9 +56,49 @@ select.level-select{border-color:var(--accent);color:var(--accent);font-weight:7
       <div class="btn-row">
         <button class="btn btn-save" type="submit">💾 Lagre</button>
         <a href="/admin/adjectives"><button class="btn btn-cancel" type="button">Avbryt</button></a>
+        <button type="button" onclick="autoFillAdj()" style="background:#2ecc71;color:#000;border:none;border-radius:8px;padding:10px 16px;cursor:pointer;font-weight:600;margin-bottom:8px;">⚡ Auto-fill</button>
+        <span id="adj-status" style="font-size:.8em;color:var(--muted);margin-left:8px;"></span>
       </div>
     </form>
   </div>
 </div>
+<script>
+async function autoFillAdj() {
+  const base = document.getElementById('adj-base').value.trim();
+  if (!base) { alert('Няма grunnform'); return; }
+
+  const neuterEl = document.getElementById('adj-neuter');
+  const pluralEl = document.getElementById('adj-plural');
+  const status = document.getElementById('adj-status');
+
+  try {
+    status.textContent = '⏳ Søker...';
+
+    const r1 = await fetch(`https://oda.uib.no/opal/prod/api/bm/articles?w=${encodeURIComponent(base)}&dict=bm&scope=e`);
+    const d1 = await r1.json();
+    const ids = d1?.articles?.bm;
+    if (!ids || ids.length === 0) { status.textContent = '❌ Ikke funnet'; return; }
+
+    const query = `{ article(id: ${ids[0]}, dictionary: Bokmaalsordboka) { lemmas { paradigms { inflections { tags wordForm } } } } }`;
+    const r2 = await fetch('https://api.ordbokapi.org/graphql', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query })
+    });
+    const d2 = await r2.json();
+    const inflections = d2?.data?.article?.lemmas?.[0]?.paradigms?.[0]?.inflections || [];
+
+    const neuter = inflections.find(i => i.tags.includes('Inkjekjoenn') && i.tags.includes('Ubestemt') && i.tags.includes('Eintal') && !i.tags.includes('Adjektiv'))?.wordForm || '';
+    const plural = inflections.find(i => i.tags.includes('Fleirtal') && !i.tags.includes('Adjektiv'))?.wordForm || '';
+
+    if (neuter) neuterEl.value = neuter;
+    if (plural) pluralEl.value = plural;
+
+    status.textContent = neuter ? '✅ Ferdig!' : '⚠️ Fant ikke former';
+  } catch(e) {
+    status.textContent = '❌ Feil: ' + e.message;
+  }
+}
+</script>
 </body>
 </html>
