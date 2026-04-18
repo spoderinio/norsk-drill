@@ -58,9 +58,6 @@ select.level-select{border-color:var(--accent);color:var(--accent);font-weight:7
           {% for lvl in levels %}{% if lvl != 'A' %}<option value="{{ lvl }}" {% if noun.level==lvl %}selected{% endif %}>{{ lvl }}</option>{% endif %}{% endfor %}
         </select>
       </div>
-      <div class="btn-row">
-        <button class="btn btn-save" type="submit">💾 Lagre</button>
-        <a href="/admin/nouns"><button class="btn btn-cancel" type="button">Avbryt</button></a>
         <div class="btn-row">
         <button class="btn btn-save" type="submit">💾 Lagre</button>
         <a href="/admin/nouns"><button class="btn btn-cancel" type="button">Avbryt</button></a>
