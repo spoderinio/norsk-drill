@@ -66,20 +66,6 @@ td{padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:middle;}
     <h3>➕ Legg til adjektiv</h3>
     <form method="post" action="/admin/adjectives/add">
       <div class="form-row">
-        <div class="f"><label>Grunnform (utrum)</label><input name="base" placeholder="stor" required/></div>
-        <div class="f"><label>Intetkjønn</label><input name="neuter" placeholder="stort"/></div>
-        <div class="f"><label>Flertall</label><input name="plural" placeholder="store"/></div>
-        <div class="f"><label>Oversettelse</label><input name="translations" placeholder="stor, stor" required/></div>
-        <div class="f-sm">
-          <label>Nivå</label>
-          <select name="level" class="level-select">
-            <option value="A">A</option>
-            {% for lvl in levels %}{% if lvl != 'A' %}<option value="{{ lvl }}">{{ lvl }}</option>{% endif %}{% endfor %}
-          </select>
-        </div>
-        <div><label>&nbsp;</label><button class="btn btn-primary" type="submit">➕</button></div>
-      </div>
-      <div class="form-row">
         <div class="f"><label>Grunnform (utrum)</label><input name="base" id="adj-base" placeholder="stor" required/></div>
         <div class="f"><label>Intetkjønn</label><input name="neuter" id="adj-neuter" placeholder="stort"/></div>
         <div class="f"><label>Flertall</label><input name="plural" id="adj-plural" placeholder="store"/></div>
