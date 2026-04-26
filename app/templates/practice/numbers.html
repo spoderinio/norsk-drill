@@ -85,10 +85,10 @@ function toNorwegian(n) {
     const o = n % 10;
     return tens[t] + (o ? ones[o] : '');
   }
-  if (n < 1000) {
+if (n < 1000) {
     const h = Math.floor(n / 100);
     const rest = n % 100;
-    return (h === 1 ? 'ett' : ones[h]) + 'hundre' + (rest ? (rest < 10 ? 'og' : '') + toNorwegian(rest) : '');
+    return (h === 1 ? 'ett' : ones[h]) + 'hundre' + (rest ? 'og' + toNorwegian(rest) : '');
   }
   if (n < 1000000) {
     const t = Math.floor(n / 1000);
