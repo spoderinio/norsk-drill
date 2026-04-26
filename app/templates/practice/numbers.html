@@ -111,6 +111,7 @@ function toOrdinal(n) {
   const base = toNorwegian(n);
   if (base.endsWith('en')) return base.slice(0, -2) + 'ende';
   if (base.endsWith('to')) return base + 'ndre';
+  if (base.endsWith('i')) return base + 'ende';
   if (base.endsWith('e')) return base + 'nde';
   return base + 'nde';
 }
