@@ -79,12 +79,11 @@ const tens = ['','','tjue','tredve','førti','femti','seksti','sytti','åtti','n
 function toNorwegian(n) {
   if (n === 0) return 'null';
   if (n < 0) return 'minus ' + toNorwegian(-n);
-
   if (n < 20) return ones[n];
   if (n < 100) {
     const t = Math.floor(n / 10);
     const o = n % 10;
-    return tens[t] + (o ? 'en' === ones[o] ? 'og' + ones[o] : 'og' + ones[o] : '');
+    return tens[t] + (o ? ones[o] : '');
   }
   if (n < 1000) {
     const h = Math.floor(n / 100);
