@@ -108,10 +108,11 @@ const ordinalSuffix = {
 
 function toOrdinal(n) {
   if (ordinalSuffix[n]) return ordinalSuffix[n];
-  if (n % 100 >= 11 && n % 100 <= 19) return toNorwegian(n) + 'de';
-  if (n % 10 === 1) return toNorwegian(n) + 'ste';
-  if (n % 10 === 2) return toNorwegian(n) + 'ndre';
-  return toNorwegian(n) + 'de';
+  const base = toNorwegian(n);
+  if (base.endsWith('en')) return base.slice(0, -2) + 'ende';
+  if (base.endsWith('to')) return base + 'ndre';
+  if (base.endsWith('e')) return base + 'nde';
+  return base + 'nde';
 }
 
 let currentText = '';
