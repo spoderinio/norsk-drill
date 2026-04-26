@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Tall – Norsk Drill</title>
+<style>
+:root{--bg:#0f1117;--card:#1a1d27;--border:#2a2d3e;--accent:#e67e22;--text:#e0e0e0;--muted:#666;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;min-height:100vh;}
+.nav{background:var(--card);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;}
+.nav-title{font-weight:700;color:var(--accent);}
+.nav-links a{color:var(--muted);text-decoration:none;margin-left:14px;font-size:.9em;}
+.container{max-width:600px;margin:0 auto;padding:30px 20px;}
+h1{margin-bottom:6px;}
+.subtitle{color:var(--muted);font-size:.9em;margin-bottom:30px;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:28px;text-align:center;}
+.input-row{display:flex;gap:10px;margin-bottom:20px;}
+.num-input{flex:1;background:var(--bg);border:2px solid var(--border);border-radius:10px;padding:14px 18px;color:var(--text);font-size:1.4em;text-align:center;}
+.num-input:focus{outline:none;border-color:var(--accent);}
+.btn{padding:14px 24px;border:none;border-radius:10px;cursor:pointer;font-size:1em;font-weight:600;}
+.btn-speak{background:var(--accent);color:#fff;width:100%;}
+.btn-speak:hover{opacity:.9;}
+.result-word{font-size:2em;font-weight:700;color:var(--text);margin:20px 0 8px;min-height:2.5em;line-height:1.2;}
+.result-ordinal{font-size:1.1em;color:var(--muted);margin-bottom:20px;min-height:1.5em;}
+.tts-btn{background:none;border:2px solid var(--border);border-radius:10px;padding:10px 20px;color:var(--muted);cursor:pointer;font-size:1.3em;transition:all .2s;}
+.tts-btn:hover{border-color:var(--accent);color:var(--accent);}
+.examples{margin-top:30px;text-align:left;}
+.examples h3{font-size:.85em;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;}
+.example-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;}
+.example-btn{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px;cursor:pointer;color:var(--text);font-size:.9em;text-align:center;transition:all .2s;}
+.example-btn:hover{border-color:var(--accent);color:var(--accent);}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <span class="nav-title">🔢 Tall</span>
+  <div class="nav-links"><a href="/">🏠 Hjem</a></div>
+</nav>
+<div class="container">
+  <h1>Norske tall</h1>
+  <p class="subtitle">Skriv et tall (legg til punktum for ordenstall: 17.)</p>
+
+  <div class="card">
+    <div class="input-row">
+      <input class="num-input" type="text" id="num-input" placeholder="42" inputmode="numeric" autofocus/>
+    </div>
+    <button class="btn btn-speak" onclick="handleInput()">🔊 Les opp</button>
+
+    <div class="result-word" id="result-word"></div>
+    <div class="result-ordinal" id="result-ordinal"></div>
+    <button class="tts-btn hidden" id="tts-btn" onclick="speakCurrent()">🔊</button>
+  </div>
+
+  <div class="examples">
+    <h3>Hurtigtaster</h3>
+    <div class="example-grid">
+      <button class="example-btn" onclick="setNum('1')">1</button>
+      <button class="example-btn" onclick="setNum('10')">10</button>
+      <button class="example-btn" onclick="setNum('11')">11</button>
+      <button class="example-btn" onclick="setNum('20')">20</button>
+      <button class="example-btn" onclick="setNum('100')">100</button>
+      <button class="example-btn" onclick="setNum('1000')">1 000</button>
+      <button class="example-btn" onclick="setNum('1.')">1.</button>
+      <button class="example-btn" onclick="setNum('2.')">2.</button>
+      <button class="example-btn" onclick="setNum('17.')">17.</button>
+      <button class="example-btn" onclick="setNum('100.')">100.</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Норвежки числа ────────────────────────────────────────────────────────────
+const ones = ['','en','to','tre','fire','fem','seks','sju','åtte','ni',
+               'ti','elleve','tolv','tretten','fjorten','femten','seksten',
+               'sytten','atten','nitten'];
+const tens = ['','','tjue','tredve','førti','femti','seksti','sytti','åtti','nitti'];
+
+function toNorwegian(n) {
+  if (n === 0) return 'null';
+  if (n < 0) return 'minus ' + toNorwegian(-n);
+
+  if (n < 20) return ones[n];
+  if (n < 100) {
+    const t = Math.floor(n / 10);
+    const o = n % 10;
+    return tens[t] + (o ? 'en' === ones[o] ? 'og' + ones[o] : 'og' + ones[o] : '');
+  }
+  if (n < 1000) {
+    const h = Math.floor(n / 100);
+    const rest = n % 100;
+    return (h === 1 ? 'ett' : ones[h]) + 'hundre' + (rest ? (rest < 10 ? 'og' : '') + toNorwegian(rest) : '');
+  }
+  if (n < 1000000) {
+    const t = Math.floor(n / 1000);
+    const rest = n % 1000;
+    return (t === 1 ? 'ett' : toNorwegian(t)) + 'tusen' + (rest ? (rest < 100 ? 'og' : '') + toNorwegian(rest) : '');
+  }
+  if (n === 1000000) return 'en million';
+  return 'for stort tall';
+}
+
+const ordinalSuffix = {
+  1:'første',2:'andre',3:'tredje',4:'fjerde',5:'femte',
+  6:'sjette',7:'sjuende',8:'åttende',9:'niende',10:'tiende',
+  11:'ellevte',12:'tolvte',13:'trettende',14:'fjortende',15:'femtende',
+  16:'sekstende',17:'syttende',18:'attende',19:'nittende',20:'tjuende',
+};
+
+function toOrdinal(n) {
+  if (ordinalSuffix[n]) return ordinalSuffix[n];
+  if (n % 100 >= 11 && n % 100 <= 19) return toNorwegian(n) + 'de';
+  if (n % 10 === 1) return toNorwegian(n) + 'ste';
+  if (n % 10 === 2) return toNorwegian(n) + 'ndre';
+  return toNorwegian(n) + 'de';
+}
+
+let currentText = '';
+
+function handleInput() {
+  const raw = document.getElementById('num-input').value.trim();
+  if (!raw) return;
+
+  const isOrdinal = raw.endsWith('.');
+  const numStr = isOrdinal ? raw.slice(0, -1) : raw;
+  const n = parseInt(numStr.replace(/\s/g, ''), 10);
+
+  if (isNaN(n) || n < 0 || n > 1000000) {
+    document.getElementById('result-word').textContent = '—';
+    document.getElementById('result-ordinal').textContent = 'Ugyldig tall';
+    return;
+  }
+
+  const cardinal = toNorwegian(n);
+  const ordinal = isOrdinal ? toOrdinal(n) : '';
+
+  document.getElementById('result-word').textContent = isOrdinal ? ordinal : cardinal;
+  document.getElementById('result-ordinal').textContent = isOrdinal ? '(' + cardinal + ')' : '';
+  document.getElementById('tts-btn').classList.remove('hidden');
+
+  currentText = isOrdinal ? ordinal : cardinal;
+  speakCurrent();
+}
+
+function speakCurrent() {
+  if (!currentText) return;
+  if (/iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent) && typeof window.AudioContext !== 'undefined' && window.speechSynthesis) {
+    const u = new SpeechSynthesisUtterance(currentText);
+    u.lang = 'nb-NO';
+    window.speechSynthesis.speak(u);
+  } else {
+    const audio = new Audio('/tts?text=' + encodeURIComponent(currentText));
+    audio.play();
+  }
+}
+
+function setNum(val) {
+  document.getElementById('num-input').value = val;
+  handleInput();
+}
+
+document.getElementById('num-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') handleInput();
+});
+</script>
+</body>
+</html>

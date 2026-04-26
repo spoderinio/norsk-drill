@@ -95,6 +95,11 @@ async def practice_verbs(request: Request, level: str = "all"):
         "request": request, "selected_level": level, "levels": LEVELS
     })
 
+# ── NUMBERS ─────────────────────────────────────────────────────────────────────
+
+@router.get("/practice/numbers", response_class=HTMLResponse)
+async def practice_numbers(request: Request):
+    return templates.TemplateResponse("practice/numbers.html", {"request": request})
 
 @router.post("/practice/verbs/next")
 async def next_verb(request: Request, db: AsyncSession = Depends(get_db)):
