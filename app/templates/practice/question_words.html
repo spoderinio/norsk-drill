@@ -239,6 +239,19 @@ window.addEventListener('load', () => {
   }
 });
 
+
+// Добавяне на инициализация в началото на скрипта (след loadNext)
+window.addEventListener('load', () => {
+  if(isApple()){
+    window.speechSynthesis.onvoiceschanged = () => {
+      voicesReady = true;
+    };
+    setTimeout(() => {
+      if(isApple()) window.speechSynthesis.getVoices();
+    }, 500);
+  }
+});
+
 document.getElementById('answer-input').addEventListener('keydown',e=>{
   if(e.key==='Enter'){if(!document.getElementById('result-area').classList.contains('hidden'))loadNext();else checkAnswer();}
 });
