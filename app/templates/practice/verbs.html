@@ -214,7 +214,7 @@ function resetSession(){
   loadNext();
 }
 
-// let voicesReady = false;
+let voicesReady = false;
 
 function isApple(){return /iPhone|iPad|iPod/.test(navigator.userAgent);}
 
@@ -235,21 +235,30 @@ async function speak(){
   if(!currentItem||reverseMode)return;
   const text=currentItem.infinitive;
 
-  // Първо опитайте с нативен API само на Mac (не iPhone)
-  if(isApple() && !/iPhone/.test(navigator.userAgent)){ 
+  // Първо опитайте с нативен API само на Apple устройства (iPhone + Mac)
+  if(isApple()){ 
     try {
+      // Зареждаме гласовете асинхронно за iOS
       await window.speechSynthesis.getVoices();
       
       const u=new SpeechSynthesisUtterance(text);
       u.lang="nb-NO";
       
-      // Изчакваме гласовете да бъдат заредени
+      // Изчакваме гласовете да бъдат заредени (iOS специфика)
       if(!voicesReady) await new Promise(r => setTimeout(r, 100));
       
       let voices = window.speechSynthesis.getVoices();
-      const nbVoice = voices.find(v => v.lang.includes('nb') || v.name.includes('Norwegian'));
       
+      // Търсим най-добрия норвежки глас от Apple
+      const nbVoice = voices.find(v => {
+        return v.lang.includes('nb') || 
+               v.name.toLowerCase().includes('norwegian') ||
+               v.name.toLowerCase().includes('norsk');
+      });
+      
+      // Ако намерим NB глас, го използваме, иначе първият наличен
       u.voice = nbVoice || voices[0];
+      
       window.speechSynthesis.cancel(); // Важно: спира предишно говорене
       window.speechSynthesis.speak(u);
     } catch (e) {
@@ -258,11 +267,12 @@ async function speak(){
       audio.play();
     }
   } else { 
-    // iPhone или Linux/Windows - винаги /tts
+    // Linux/Windows - винаги /tts
     const audio=new Audio("/tts?text="+encodeURIComponent(text));
     audio.play();
   }
 }
+
 
 
 document.getElementById('inp-infinitiv').addEventListener('keydown',e=>{
