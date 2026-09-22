@@ -117,33 +117,7 @@ function toOrdinal(n) {
 }
 
 let currentText = '';
-
-function handleInput() {
-  const raw = document.getElementById('num-input').value.trim();
-  if (!raw) return;
-
-  const isOrdinal = raw.endsWith('.');
-  const numStr = isOrdinal ? raw.slice(0, -1) : raw;
-  const n = parseInt(numStr.replace(/\s/g, ''), 10);
-
-  if (isNaN(n) || n < 0 || n > 1000000) {
-    document.getElementById('result-word').textContent = '—';
-    document.getElementById('result-ordinal').textContent = 'Ugyldig tall';
-    return;
-  }
-
-  const cardinal = toNorwegian(n);
-  const ordinal = isOrdinal ? toOrdinal(n) : '';
-
-  document.getElementById('result-word').textContent = isOrdinal ? ordinal : cardinal;
-  document.getElementById('result-ordinal').textContent = isOrdinal ? '(' + cardinal + ')' : '';
-  document.getElementById('tts-btn').classList.remove('hidden');
-
-  currentText = isOrdinal ? ordinal : cardinal;
-  speakCurrent();
-}
-
-let currentText = ''; // Запазено от оригинала
+let voicesReady = false;
 
 function handleInput() {
   const raw = document.getElementById('num-input').value.trim();
@@ -170,15 +144,21 @@ function handleInput() {
   speakCurrent(); // Извикване на говоренето
 }
 
-function speakCurrent() {
+function isApple(){
+  return /Mac|iPhone|iPad|iPod/.test(navigator.userAgent);
+}
+
+async function speakCurrent() {
   if (!currentText) return;
-  
+
+  // Винаги опитайте /tts първо (работи на всички устройства)
   const audio=new Audio("/tts?text="+encodeURIComponent(currentText));
-  
+
   try {
     await audio.play();
   } catch(e){
-    if(isApple()){ 
+    // Ако /tts не заработи, опитайте нативно само на Mac (не iPhone)
+    if(isApple() && !/iPhone/.test(navigator.userAgent)){
       const u=new SpeechSynthesisUtterance(currentText);
       u.lang='nb-NO';window.speechSynthesis.speak(u);
     }
