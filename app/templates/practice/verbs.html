@@ -214,66 +214,23 @@ function resetSession(){
   loadNext();
 }
 
-let voicesReady = false;
-
-function isApple(){return /iPhone|iPad|iPod/.test(navigator.userAgent);}
-
-// Инициализация на гласовете за iOS
-if(isApple()){
-  window.speechSynthesis.onvoiceschanged = () => {
-    voicesReady = true;
-    console.log('iOS voices loaded');
-  };
-  
-  // Зареждаме веднага при стартиране (за iOS)
-  setTimeout(() => {
-    if(isApple()) window.speechSynthesis.getVoices();
-  }, 500);
-}
-
 async function speak(){
   if(!currentItem||reverseMode)return;
   const text=currentItem.infinitive;
 
-  // Първо опитайте с нативен API само на Apple устройства (iPhone + Mac)
-  if(isApple()){ 
-    try {
-      // Зареждаме гласовете асинхронно за iOS
-      await window.speechSynthesis.getVoices();
-      
+  // Винаги опитайте /tts първо (работи на всички устройства)
+  const audio=new Audio("/tts?text="+encodeURIComponent(text));
+  
+  // Ако /tts не заработи, опитайте нативно само на Mac (не iPhone)
+  try {
+    await audio.play();
+  } catch(e){
+    if(isApple() && !/iPhone/.test(navigator.userAgent)){ 
       const u=new SpeechSynthesisUtterance(text);
-      u.lang="nb-NO";
-      
-      // Изчакваме гласовете да бъдат заредени (iOS специфика)
-      if(!voicesReady) await new Promise(r => setTimeout(r, 100));
-      
-      let voices = window.speechSynthesis.getVoices();
-      
-      // Търсим най-добрия норвежки глас от Apple
-      const nbVoice = voices.find(v => {
-        return v.lang.includes('nb') || 
-               v.name.toLowerCase().includes('norwegian') ||
-               v.name.toLowerCase().includes('norsk');
-      });
-      
-      // Ако намерим NB глас, го използваме, иначе първият наличен
-      u.voice = nbVoice || voices[0];
-      
-      window.speechSynthesis.cancel(); // Важно: спира предишно говорене
-      window.speechSynthesis.speak(u);
-    } catch (e) {
-      console.log('Native API failed, fallback to /tts');
-      const audio=new Audio("/tts?text="+encodeURIComponent(text));
-      audio.play();
+      u.lang="nb-NO";window.speechSynthesis.speak(u);
     }
-  } else { 
-    // Linux/Windows - винаги /tts
-    const audio=new Audio("/tts?text="+encodeURIComponent(text));
-    audio.play();
   }
 }
-
-
 
 document.getElementById('inp-infinitiv').addEventListener('keydown',e=>{
   if(e.key==='Enter'){
