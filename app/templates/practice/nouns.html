@@ -208,18 +208,24 @@ function resetSession(){
   loadNext();
 }
 
-// function isApple(){return /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent)&&typeof window.AudioContext!=='undefined';}
-function speak(){
+async function speak(){
   if(!currentItem||reverseMode)return;
-  const text=currentItem.article+' '+currentItem.word;
-  if(isApple()&&window.speechSynthesis){
-    const u=new SpeechSynthesisUtterance(text);
-    u.lang='nb-NO';window.speechSynthesis.speak(u);
-  }else{
-    const audio=new Audio('/tts?text='+encodeURIComponent(text));
-    audio.play();
+  const text=currentItem.infinitive;
+
+  // Винаги опитайте /tts първо (работи на всички устройства)
+  const audio=new Audio("/tts?text="+encodeURIComponent(text));
+  
+  // Ако /tts не заработи, опитайте нативно само на Mac (не iPhone)
+  try {
+    await audio.play();
+  } catch(e){
+    if(isApple() && !/iPhone/.test(navigator.userAgent)){ 
+      const u=new SpeechSynthesisUtterance(text);
+      u.lang="nb-NO";window.speechSynthesis.speak(u);
+    }
   }
 }
+
 
 document.getElementById('answer-input').addEventListener('keydown',e=>{
   if(e.key==='Enter'){
