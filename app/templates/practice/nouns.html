@@ -208,7 +208,7 @@ function resetSession(){
   loadNext();
 }
 
-function isApple(){return /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent)&&typeof window.AudioContext!=='undefined';}
+// function isApple(){return /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent)&&typeof window.AudioContext!=='undefined';}
 function speak(){
   if(!currentItem||reverseMode)return;
   const text=currentItem.article+' '+currentItem.word;
