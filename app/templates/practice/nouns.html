@@ -225,47 +225,51 @@ if(isApple()){
   }, 500);
 }
 
+let voicesReady = false;
+
+function isApple(){return /iPhone|iPad|iPod/.test(navigator.userAgent);}
+
+// Инициализация на гласовете за iOS (веднага при зареждане)
+if(isApple()){
+  window.speechSynthesis.onvoiceschanged = () => {
+    voicesReady = true;
+  };
+  
+  setTimeout(() => {
+    if(isApple()) window.speechSynthesis.getVoices();
+  }, 500);
+}
+
 async function speak(){
   if(!currentItem||reverseMode)return;
-  const text = currentItem.infinitive || currentItem.base || currentItem.norwegian || currentItem.article + currentItem.word || currentItem.norwegian; // Адаптирай според файла
   
-  // Първо опитайте с нативен API само на Apple устройства (iPhone + Mac)
-  if(isApple()){ 
-    try {
-      // Зареждаме гласовете асинхронно за iOS
-      await window.speechSynthesis.getVoices();
-      
-      const u=new SpeechSynthesisUtterance(text);
-      u.lang='nb-NO';
-      
-      // Изчакваме гласовете да бъдат заредени (iOS специфика)
-      if(!voicesReady) await new Promise(r => setTimeout(r, 100));
-      
-      let voices = window.speechSynthesis.getVoices();
-      const nbVoice = voices.find(v => {
-        return v.lang.includes('nb') || 
-               v.name.toLowerCase().includes('norwegian') ||
-               v.name.toLowerCase().includes('norsk');
-      });
-      
-      // Ако намерим NB глас, го използваме, иначе първият наличен
-      u.voice = nbVoice || voices[0];
-      
-      window.speechSynthesis.cancel(); // Важно: спира предишно говорене
-      window.speechSynthesis.speak(u);
-    } catch (e) {
-      console.log('Native API failed, fallback to /tts');
-      const audio=new Audio("/tts?text="+encodeURIComponent(text));
-      await audio.play();
-    }
-  } else { 
-    // Linux/Windows - винаги /tts
-    const audio=new Audio("/tts?text="+encodeURIComponent(text));
+  const text = currentItem.infinitive || currentItem.base || currentItem.norwegian || currentItem.article + currentItem.word || currentItem.norwegian;
+  
+  // Първо опитайте с /tts (работи на всички устройства)
+  const audio=new Audio("/tts?text="+encodeURIComponent(text));
+  
+  try {
     await audio.play();
+  } catch(e){
+    // Ако /tts не заработи, опитайте нативно за ВСИЧКИ Apple устройства (вкл. iPhone)
+    if(isApple()){ 
+      const u=new SpeechSynthesisUtterance(text);
+      u.lang='nb-NO';window.speechSynthesis.speak(u);
+    }
   }
 }
 
-
+// Добавяне на инициализация в началото на скрипта (след loadNext)
+window.addEventListener('load', () => {
+  if(isApple()){
+    window.speechSynthesis.onvoiceschanged = () => {
+      voicesReady = true;
+    };
+    setTimeout(() => {
+      if(isApple()) window.speechSynthesis.getVoices();
+    }, 500);
+  }
+});
 
 document.getElementById('answer-input').addEventListener('keydown',e=>{
   if(e.key==='Enter'){
