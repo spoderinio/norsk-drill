@@ -178,7 +178,67 @@ function resetSession(){
   document.getElementById('practice-card').classList.remove('hidden');
   loadNext();
 }
-function speak(){if(!currentItem||!window.speechSynthesis||reverseMode)return;const u=new SpeechSynthesisUtterance(currentItem.norwegian);u.lang='nb-NO';window.speechSynthesis.speak(u);}
+let voicesReady = false;
+
+function isApple(){return /iPhone|iPad|iPod/.test(navigator.userAgent);}
+
+// Инициализация на гласовете за iOS (веднага при зареждане)
+if(isApple()){
+  window.speechSynthesis.onvoiceschanged = () => {
+    voicesReady = true;
+  };
+  
+  setTimeout(() => {
+    if(isApple()) window.speechSynthesis.getVoices();
+  }, 500);
+}
+
+let voicesReady = false;
+
+function isApple(){return /iPhone|iPad|iPod/.test(navigator.userAgent);}
+
+// Инициализация на гласовете за iOS (веднага при зареждане)
+if(isApple()){
+  window.speechSynthesis.onvoiceschanged = () => {
+    voicesReady = true;
+  };
+  
+  setTimeout(() => {
+    if(isApple()) window.speechSynthesis.getVoices();
+  }, 500);
+}
+
+async function speak(){
+  if(!currentItem||reverseMode)return;
+  
+  const text = currentItem.infinitive || currentItem.base || currentItem.norwegian || currentItem.article + currentItem.word || currentItem.norwegian;
+  
+  // Първо опитайте с /tts (работи на всички устройства)
+  const audio=new Audio("/tts?text="+encodeURIComponent(text));
+  
+  try {
+    await audio.play();
+  } catch(e){
+    // Ако /tts не заработи, опитайте нативно за ВСИЧКИ Apple устройства (вкл. iPhone)
+    if(isApple()){ 
+      const u=new SpeechSynthesisUtterance(text);
+      u.lang='nb-NO';window.speechSynthesis.speak(u);
+    }
+  }
+}
+
+// Добавяне на инициализация в началото на скрипта (след loadNext)
+window.addEventListener('load', () => {
+  if(isApple()){
+    window.speechSynthesis.onvoiceschanged = () => {
+      voicesReady = true;
+    };
+    setTimeout(() => {
+      if(isApple()) window.speechSynthesis.getVoices();
+    }, 500);
+  }
+});
+
 document.getElementById('answer-input').addEventListener('keydown',e=>{
   if(e.key==='Enter'){if(!document.getElementById('result-area').classList.contains('hidden'))loadNext();else checkAnswer();}
 });
