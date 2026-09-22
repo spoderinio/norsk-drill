@@ -214,43 +214,56 @@ function resetSession(){
   loadNext();
 }
 
-// function isApple(){return /iPhone|iPad|iPod/.test(navigator.userAgent);} // Изключете Mac от проверката, ако искате различно поведение
+// let voicesReady = false;
 
-// async function speak(){
-//   if(!currentItem||reverseMode)return;
-//   const text=currentItem.infinitive;
+function isApple(){return /iPhone|iPad|iPod/.test(navigator.userAgent);}
 
-//   // Първо опитайте с нативен API само на iPhone (ако е Apple)
-//   if(isApple()){ 
-//     try {
-//       // Зареждаме гласовете асинхронно за iOS
-//       await window.speechSynthesis.getVoices();
+// Инициализация на гласовете за iOS
+if(isApple()){
+  window.speechSynthesis.onvoiceschanged = () => {
+    voicesReady = true;
+    console.log('iOS voices loaded');
+  };
+  
+  // Зареждаме веднага при стартиране (за iOS)
+  setTimeout(() => {
+    if(isApple()) window.speechSynthesis.getVoices();
+  }, 500);
+}
+
+async function speak(){
+  if(!currentItem||reverseMode)return;
+  const text=currentItem.infinitive;
+
+  // Първо опитайте с нативен API само на Mac (не iPhone)
+  if(isApple() && !/iPhone/.test(navigator.userAgent)){ 
+    try {
+      await window.speechSynthesis.getVoices();
       
-//       const u=new SpeechSynthesisUtterance(text);
-//       u.lang="nb-NO";
+      const u=new SpeechSynthesisUtterance(text);
+      u.lang="nb-NO";
       
-//       // Опитайте да намерим норвежки глас, иначе вземете първия наличен
-//       let voices = window.speechSynthesis.getVoices();
-//       if(voices.length > 0) {
-//         const nbVoice = voices.find(v => v.lang.includes('nb') || v.name.includes('Norwegian'));
-//         u.voice = nbVoice || voices[0]; // Използва първият наличен, ако няма NB
-//         window.speechSynthesis.cancel(); // Спрете предишно говорене
-//         window.speechSynthesis.speak(u);
-//       } else {
-//         throw new Error("Няма гласове");
-//       }
-//     } catch (e) {
-//       // Ако нативният API не работи, падаме към /tts
-//       console.log('Fallback to TTS API:', e.message);
-//       const audio=new Audio("/tts?text="+encodeURIComponent(text));
-//       audio.play();
-//     }
-//   } else { 
-//     // Linux/Windows - винаги /tts
-//     const audio=new Audio("/tts?text="+encodeURIComponent(text));
-//     audio.play();
-//   }
-// }
+      // Изчакваме гласовете да бъдат заредени
+      if(!voicesReady) await new Promise(r => setTimeout(r, 100));
+      
+      let voices = window.speechSynthesis.getVoices();
+      const nbVoice = voices.find(v => v.lang.includes('nb') || v.name.includes('Norwegian'));
+      
+      u.voice = nbVoice || voices[0];
+      window.speechSynthesis.cancel(); // Важно: спира предишно говорене
+      window.speechSynthesis.speak(u);
+    } catch (e) {
+      console.log('Native API failed, fallback to /tts');
+      const audio=new Audio("/tts?text="+encodeURIComponent(text));
+      audio.play();
+    }
+  } else { 
+    // iPhone или Linux/Windows - винаги /tts
+    const audio=new Audio("/tts?text="+encodeURIComponent(text));
+    audio.play();
+  }
+}
+
 
 document.getElementById('inp-infinitiv').addEventListener('keydown',e=>{
   if(e.key==='Enter'){
